@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>菜品列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+
+        /* 左侧菜单样式 */
+        .sidebar {
+            background-color: #1e293b;
+            min-width: 200px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 16px;
+            color: #f1f5f9;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .sidebar a:hover {
+            background-color: #334155;
+            border-left-color: #3b82f6;
+            color: #fff;
+        }
+
+        .sidebar a.active {
+            background-color: #334155;
+            border-left-color: #3b82f6;
+            font-weight: bold;
+        }
+
+        /* 表格美化 */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        thead tr {
+            background: linear-gradient(to right, #1e293b, #334155);
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+        }
+
+        tbody tr:hover {
+            background-color: #475569;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            /* 对应 py-1 px-3 */
+            border-radius: 9999px;
+            /* 对应 rounded-full */
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+
+        .status-normal {
+            background-color: #16a34a;
+            /* green */
+            color: #f0fdf4;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .status-warning {
+            background-color: #facc15;
+            /* yellow */
+            color: #1e293b;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .status-critical {
+            background-color: #dc2626;
+            /* red */
+            color: #fef2f2;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flex min-h-screen font-sans">
+        <!-- 左侧菜单 -->
+        <nav class="sidebar flex flex-col p-4">
+            <h2 class="text-xl font-bold mb-4">メニュー</h2>
+            <a href="index.html">ホーム</a>
+            <a href="orders.html">注文管理</a>
+            <a href="inventory.html" class="active">在庫管理</a>
+            <a href="reports.html">レポート</a>
+            <a href="settings.html">設定</a>
+        </nav>
+
+        <!-- 主体内容 -->
+        <div class="flex-1 p-6">
+            <h1 class="text-3xl font-bold mb-6">🍽️ 菜品列表</h1>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-slate-800 rounded-lg shadow-lg">
+                    <thead>
+                        <tr>
+                            <th class="text-left text-slate-200">ID</th>
+                            <th class="text-left text-slate-200">菜名</th>
+                            <th class="text-left text-slate-200">重量(g)</th>
+                            <th class="text-left text-slate-200">状态</th>
+                            <th class="text-left text-slate-200">补充建议</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-slate-700">
+                            <td class="text-slate-100">1</td>
+                            <td class="text-slate-100">オーストラリア産ロブスター</td>
+                            <td class="text-slate-100">100</td>
+                            <td><span class="status-normal">十分</span></td>
+                            <td class="text-slate-100">--</td>
+                        </tr>
+                        <tr class="border-b border-slate-700">
+                            <td class="text-slate-100">2</td>
+                            <td class="text-slate-100">ブラックペッパービーフ</td>
+                            <td class="text-slate-100">85</td>
+                            <td><span class="status-normal">十分</span></td>
+                            <td class="text-slate-100">--</td>
+                        </tr>
+                        <tr class="border-b border-slate-700">
+                            <td class="text-slate-100">3</td>
+                            <td class="text-slate-100">フォアグラ</td>
+                            <td class="text-slate-100">45</td>
+                            <td><span class="status-warning">補充推奨</span></td>
+                            <td class="text-slate-100">注意して補充</td>
+                        </tr>
+                        <tr>
+                            <td class="text-slate-100">4</td>
+                            <td class="text-slate-100">ティラミス</td>
+                            <td class="text-slate-100">20</td>
+                            <td><span class="status-critical">至急補充</span></td>
+                            <td class="text-slate-100">立即补充</td>
+                        </tr>
+                        <!-- 可以继续添加更多菜品 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
