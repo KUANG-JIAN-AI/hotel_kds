@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>スマート厨房 KDS システム</title>
+    <link href="{{ url_for('static', filename='tailwind.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="flex min-h-screen font-sans">
+        <!-- 左侧菜单 -->
+        <nav class="sidebar flex flex-col p-4">
+            <h2 class="text-xl font-bold mb-4">メニュー</h2>
+            <a href="/" class="active">ホーム</a>
+            <a href="inventory.html">在庫管理</a>
+            <a href="orders.html">注文管理</a>
+            <a href="reports.html">レポート</a>
+            <a href="settings.html">設定</a>
+        </nav>
+
+        <!-- 主体内容 -->
+        <div class="flex-1 p-6">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    {% block model %}{% endblock %}
+    {% block js %}{% endblock %}
+</body>
+
+</html>

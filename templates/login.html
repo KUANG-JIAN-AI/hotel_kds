@@ -4,64 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>登录 - KDS 系统</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #f1f5f9;
-        }
-
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-box {
-            background-color: #1e293b;
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .login-input {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            background-color: #334155;
-            color: #f1f5f9;
-            border: 1px solid #475569;
-            margin-bottom: 1rem;
-        }
-
-        .login-input::placeholder {
-            color: #94a3b8;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 0.5rem 0;
-            border-radius: 0.5rem;
-            background-color: #2563eb;
-            color: #fff;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .login-btn:hover {
-            background-color: #3b82f6;
-        }
-
-        h1 {
-            font-size: 1.75rem;
-            font-weight: bold;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='tailwind.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 
 <body>
@@ -75,6 +19,7 @@
             </form>
         </div>
     </div>
+    <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
 
     <script>
         const loginForm = document.getElementById('login-form');
@@ -85,12 +30,19 @@
             const password = document.getElementById('password').value;
 
             // 这里可以添加你的验证逻辑，比如直接跳转到主页
-            if (username && password) {
-                alert(`登录成功！账号: ${username}`);
-                // window.location.href = 'index.html'; // 登录成功跳转主页
-            } else {
-                alert('请输入账号和密码');
-            }
+            Swal.fire({
+                title: '登录成功！',
+                text: '欢迎回来，厨师长 👨‍🍳',
+                icon: 'success',
+                background: '#1e293b',
+                color: '#f1f5f9',
+                confirmButtonColor: '#3b82f6',
+                timer: 2000, // 弹窗显示 2 秒
+                showConfirmButton: false, // 不显示确认按钮
+                didClose: () => {
+                    window.location.href = '/'; // 跳转到后台主页
+                }
+            });
         });
     </script>
 </body>

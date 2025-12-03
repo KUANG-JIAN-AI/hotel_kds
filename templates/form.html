@@ -1,302 +1,149 @@
-<!DOCTYPE html>
-<html lang="ja">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>菜品列表</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #f1f5f9;
-        }
+{% block content %}
 
-        /* 左侧菜单样式 */
-        .sidebar {
-            background-color: #1e293b;
-            min-width: 200px;
-        }
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">🍽️ 菜品列表</h1>
+    <button id="add-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg">
+        ➕ 添加菜品
+    </button>
+</div>
 
-        .sidebar a {
-            display: block;
-            padding: 12px 16px;
-            color: #f1f5f9;
-            border-left: 4px solid transparent;
-            transition: all 0.2s;
-        }
+<div class="overflow-x-auto">
+    <table id="dish-table" class="min-w-full bg-slate-800 rounded-lg shadow-lg">
+        <thead>
+            <tr>
+                <th class="text-left text-slate-200">ID</th>
+                <th class="text-left text-slate-200">菜名</th>
+                <th class="text-left text-slate-200">重量(g)</th>
+                <th class="text-left text-slate-200">状态</th>
+                <th class="text-left text-slate-200">补充建议</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="border-b border-slate-700">
+                <td class="text-slate-100">1</td>
+                <td class="text-slate-100">オーストラリア産ロブスター</td>
+                <td class="text-slate-100">100</td>
+                <td><span class="status-normal">十分</span></td>
+                <td class="text-slate-100">--</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+                <td class="text-slate-100">2</td>
+                <td class="text-slate-100">ブラックペッパービーフ</td>
+                <td class="text-slate-100">85</td>
+                <td><span class="status-normal">十分</span></td>
+                <td class="text-slate-100">--</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+                <td class="text-slate-100">3</td>
+                <td class="text-slate-100">フォアグラ</td>
+                <td class="text-slate-100">45</td>
+                <td><span class="status-warning">補充推奨</span></td>
+                <td class="text-slate-100">注意して補充</td>
+            </tr>
+            <tr>
+                <td class="text-slate-100">4</td>
+                <td class="text-slate-100">ティラミス</td>
+                <td class="text-slate-100">20</td>
+                <td><span class="status-critical">至急補充</span></td>
+                <td class="text-slate-100">立即补充</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
 
-        .sidebar a:hover {
-            background-color: #334155;
-            border-left-color: #3b82f6;
-            color: #fff;
-        }
 
-        .sidebar a.active {
-            background-color: #334155;
-            border-left-color: #3b82f6;
-            font-weight: bold;
-        }
-
-        /* 表格样式 */
-        table {
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        thead tr {
-            background: linear-gradient(to right, #1e293b, #334155);
-        }
-
-        th,
-        td {
-            padding: 12px 16px;
-        }
-
-        tbody tr:hover {
-            background-color: #475569;
-        }
-
-        .status-normal {
-            background-color: #16a34a;
-            color: #f0fdf4;
-            padding: 4px 8px;
-            border-radius: 9999px;
-            font-weight: 500;
-        }
-
-        .status-warning {
-            background-color: #facc15;
-            color: #1e293b;
-            padding: 4px 8px;
-            border-radius: 9999px;
-            font-weight: 500;
-        }
-
-        .status-critical {
-            background-color: #dc2626;
-            color: #fef2f2;
-            padding: 4px 8px;
-            border-radius: 9999px;
-            font-weight: 500;
-        }
-
-        /* 弹窗遮罩和容器 */
-        .modal-overlay {
-            background-color: rgba(15, 23, 42, 0.8);
-        }
-
-        /* 输入框、选择框样式 */
-        .modal-input {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            background-color: #334155;
-            color: #f1f5f9;
-            border: 1px solid #475569;
-        }
-
-        .modal-input::placeholder {
-            color: #94a3b8;
-        }
-
-        .modal-select {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            background-color: #334155;
-            color: #f1f5f9;
-            border: 1px solid #475569;
-        }
-
-        .modal-select option {
-            background-color: #1e293b;
-            color: #f1f5f9;
-        }
-
-        .modal-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .modal-btn-primary {
-            background-color: #2563eb;
-            color: white;
-        }
-
-        .modal-btn-primary:hover {
-            background-color: #3b82f6;
-        }
-
-        .modal-btn-cancel {
-            background-color: #475569;
-            color: #f1f5f9;
-        }
-
-        .modal-btn-cancel:hover {
-            background-color: #64748b;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="flex min-h-screen font-sans">
-        <!-- 左侧菜单 -->
-        <nav class="sidebar flex flex-col p-4">
-            <h2 class="text-xl font-bold mb-4">メニュー</h2>
-            <a href="index.html">ホーム</a>
-            <a href="orders.html">注文管理</a>
-            <a href="inventory.html" class="active">在庫管理</a>
-            <a href="reports.html">レポート</a>
-            <a href="settings.html">設定</a>
-        </nav>
-
-        <!-- 主体内容 -->
-        <div class="flex-1 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold">🍽️ 菜品列表</h1>
-                <button id="add-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg">
-                    ➕ 添加菜品
-                </button>
+{% block model %}
+<!-- 弹窗 -->
+<div id="modal" class="fixed inset-0 hidden items-center justify-center modal-overlay z-50">
+    <div class="bg-slate-800 p-6 rounded-lg w-96 shadow-lg">
+        <h2 class="text-xl font-bold mb-4">添加新菜品</h2>
+        <form id="add-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-200 mb-1">菜名</label>
+                <input type="text" id="dish-name" class="modal-input" placeholder="请输入菜名" required>
             </div>
-
-            <div class="overflow-x-auto">
-                <table id="dish-table" class="min-w-full bg-slate-800 rounded-lg shadow-lg">
-                    <thead>
-                        <tr>
-                            <th class="text-left text-slate-200">ID</th>
-                            <th class="text-left text-slate-200">菜名</th>
-                            <th class="text-left text-slate-200">重量(g)</th>
-                            <th class="text-left text-slate-200">状态</th>
-                            <th class="text-left text-slate-200">补充建议</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b border-slate-700">
-                            <td class="text-slate-100">1</td>
-                            <td class="text-slate-100">オーストラリア産ロブスター</td>
-                            <td class="text-slate-100">100</td>
-                            <td><span class="status-normal">十分</span></td>
-                            <td class="text-slate-100">--</td>
-                        </tr>
-                        <tr class="border-b border-slate-700">
-                            <td class="text-slate-100">2</td>
-                            <td class="text-slate-100">ブラックペッパービーフ</td>
-                            <td class="text-slate-100">85</td>
-                            <td><span class="status-normal">十分</span></td>
-                            <td class="text-slate-100">--</td>
-                        </tr>
-                        <tr class="border-b border-slate-700">
-                            <td class="text-slate-100">3</td>
-                            <td class="text-slate-100">フォアグラ</td>
-                            <td class="text-slate-100">45</td>
-                            <td><span class="status-warning">補充推奨</span></td>
-                            <td class="text-slate-100">注意して補充</td>
-                        </tr>
-                        <tr>
-                            <td class="text-slate-100">4</td>
-                            <td class="text-slate-100">ティラミス</td>
-                            <td class="text-slate-100">20</td>
-                            <td><span class="status-critical">至急補充</span></td>
-                            <td class="text-slate-100">立即补充</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div>
+                <label class="block text-slate-200 mb-1">重量(g)</label>
+                <input type="number" id="dish-weight" class="modal-input" placeholder="请输入重量" required>
             </div>
-        </div>
+            <div>
+                <label class="block text-slate-200 mb-1">状态</label>
+                <select id="dish-status" class="modal-select" required>
+                    <option value="normal">十分</option>
+                    <option value="warning">補充推奨</option>
+                    <option value="critical">至急補充</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">补充建议</label>
+                <input type="text" id="dish-advice" class="modal-input" placeholder="请输入补充建议">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="cancel-btn" class="modal-btn modal-btn-cancel">取消</button>
+                <button type="submit" class="modal-btn modal-btn-primary">添加</button>
+            </div>
+        </form>
     </div>
+</div>
+{% endblock %}
 
-    <!-- 弹窗 -->
-    <div id="modal" class="fixed inset-0 hidden items-center justify-center modal-overlay z-50">
-        <div class="bg-slate-800 p-6 rounded-lg w-96 shadow-lg">
-            <h2 class="text-xl font-bold mb-4">添加新菜品</h2>
-            <form id="add-form" class="space-y-4">
-                <div>
-                    <label class="block text-slate-200 mb-1">菜名</label>
-                    <input type="text" id="dish-name" class="modal-input" placeholder="请输入菜名" required>
-                </div>
-                <div>
-                    <label class="block text-slate-200 mb-1">重量(g)</label>
-                    <input type="number" id="dish-weight" class="modal-input" placeholder="请输入重量" required>
-                </div>
-                <div>
-                    <label class="block text-slate-200 mb-1">状态</label>
-                    <select id="dish-status" class="modal-select" required>
-                        <option value="normal">十分</option>
-                        <option value="warning">補充推奨</option>
-                        <option value="critical">至急補充</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-slate-200 mb-1">补充建议</label>
-                    <input type="text" id="dish-advice" class="modal-input" placeholder="请输入补充建议">
-                </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" id="cancel-btn" class="modal-btn modal-btn-cancel">取消</button>
-                    <button type="submit" class="modal-btn modal-btn-primary">添加</button>
-                </div>
-            </form>
-        </div>
-    </div>
+{% block js %}
+<script>
+    const addBtn = document.getElementById('add-btn');
+    const modal = document.getElementById('modal');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const addForm = document.getElementById('add-form');
+    const tableBody = document.querySelector('#dish-table tbody');
 
-    <script>
-        const addBtn = document.getElementById('add-btn');
-        const modal = document.getElementById('modal');
-        const cancelBtn = document.getElementById('cancel-btn');
-        const addForm = document.getElementById('add-form');
-        const tableBody = document.querySelector('#dish-table tbody');
+    let nextId = tableBody.rows.length + 1;
 
-        let nextId = tableBody.rows.length + 1;
+    addBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
 
-        addBtn.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        });
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    });
 
-        cancelBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        });
+    addForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('dish-name').value;
+        const weight = document.getElementById('dish-weight').value;
+        const status = document.getElementById('dish-status').value;
+        const advice = document.getElementById('dish-advice').value;
 
-        addForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('dish-name').value;
-            const weight = document.getElementById('dish-weight').value;
-            const status = document.getElementById('dish-status').value;
-            const advice = document.getElementById('dish-advice').value;
+        let statusClass = '';
+        let statusText = '';
+        if (status === 'normal') {
+            statusClass = 'status-normal';
+            statusText = '十分';
+        } else if (status === 'warning') {
+            statusClass = 'status-warning';
+            statusText = '補充推奨';
+        } else {
+            statusClass = 'status-critical';
+            statusText = '至急補充';
+        }
 
-            let statusClass = '';
-            let statusText = '';
-            if (status === 'normal') {
-                statusClass = 'status-normal';
-                statusText = '十分';
-            } else if (status === 'warning') {
-                statusClass = 'status-warning';
-                statusText = '補充推奨';
-            } else {
-                statusClass = 'status-critical';
-                statusText = '至急補充';
-            }
-
-            const row = document.createElement('tr');
-            row.classList.add('border-b', 'border-slate-700');
-            row.innerHTML = `
+        const row = document.createElement('tr');
+        row.classList.add('border-b', 'border-slate-700');
+        row.innerHTML = `
                 <td class="text-slate-100">${nextId++}</td>
                 <td class="text-slate-100">${name}</td>
                 <td class="text-slate-100">${weight}</td>
                 <td><span class="${statusClass}">${statusText}</span></td>
                 <td class="text-slate-100">${advice}</td>
             `;
-            tableBody.appendChild(row);
+        tableBody.appendChild(row);
 
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            addForm.reset();
-        });
-    </script>
-</body>
-
-</html>
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        addForm.reset();
+    });
+</script>
+{% endblock %}

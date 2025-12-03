@@ -9,14 +9,10 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/table")
-def table():
-    return render_template("table.html")
-
-
 @app.route("/form")
 def form():
     return render_template("form.html")
+
 
 @app.route("/login")
 def login():
