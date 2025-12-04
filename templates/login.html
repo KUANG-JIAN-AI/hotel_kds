@@ -11,7 +11,7 @@
 <body>
     <div class="login-container">
         <div class="login-box">
-            <h1>登录 KDS 系统</h1>
+            <h1 class="mb-5 text-center">登录 KDS 系统</h1>
             <form id="login-form">
                 <input type="text" id="username" class="login-input" placeholder="账号" required>
                 <input type="password" id="password" class="login-input" placeholder="密码" required>
@@ -20,6 +20,7 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
 
     <script>
         const loginForm = document.getElementById('login-form');
@@ -29,20 +30,39 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            // 这里可以添加你的验证逻辑，比如直接跳转到主页
-            Swal.fire({
-                title: '登录成功！',
-                text: '欢迎回来，厨师长 👨‍🍳',
-                icon: 'success',
-                background: '#1e293b',
-                color: '#f1f5f9',
-                confirmButtonColor: '#3b82f6',
-                timer: 2000, // 弹窗显示 2 秒
-                showConfirmButton: false, // 不显示确认按钮
-                didClose: () => {
-                    window.location.href = '/'; // 跳转到后台主页
-                }
-            });
+            // --------------------------
+            // 发送 AJAX 请求到后端
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        // 这里可以添加你的验证逻辑，比如直接跳转到主页
+                        Swal.fire({
+                            title: '登录成功！',
+                            text: '欢迎回来，厨师长 👨‍🍳',
+                            icon: 'success',
+                            background: '#1e293b',
+                            color: '#f1f5f9',
+                            confirmButtonColor: '#3b82f6',
+                            timer: 2000, // 弹窗显示 2 秒
+                            showConfirmButton: false, // 不显示确认按钮
+                            didClose: () => {
+                                window.location.href = '/'; // 跳转到后台主页
+                            }
+                        });
+                    } else {
+                        error_alert(data.msg);
+                    }
+                })
+                .catch(err => console.error('请求失败', err));
+            // --------------------------
+
         });
     </script>
 </body>

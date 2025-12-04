@@ -1,12 +1,33 @@
-from flask import jsonify, request
+from flask import jsonify, request, session
 from sqlalchemy.exc import SQLAlchemyError
 
 from models import db, Chefs
 
 
-def list():
-    chefs = Chefs.query.order_by(Chefs.id.desc()).all()
-    return [c.to_dict() for c in chefs]
+def login_act():
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+
+    # 参数校验
+    if not username or not password:
+        return jsonify({"code": 400, "msg": "用户名和密码不能为空"}), 400
+
+    chef = Chefs.query.filter_by(username=username).first()
+
+    # 统一模糊错误信息，避免账号枚举
+    if not chef or not chef.check_password(password):
+        return jsonify({"code": 401, "msg": "用户名或密码错误"}), 401
+
+    if chef.status == 2:
+        return jsonify({"code": 401, "msg": "用户已离职"}), 403
+
+    # ✅ 写入 session
+    session["user_id"] = chef.id
+    session["username"] = chef.username
+    session["nickname"] = chef.nickname
+
+    return jsonify({"code": 200, "msg": "success", "data": chef.to_dict()}), 200
 
 
 def create():

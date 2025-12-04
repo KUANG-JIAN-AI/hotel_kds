@@ -8,30 +8,72 @@
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 
-<body>
-    <div class="flex min-h-screen font-sans">
+<body class="font-sans">
+    <div class="flex min-h-screen">
         <!-- 左侧菜单 -->
         <nav class="sidebar flex flex-col p-4">
-            <h2 class="text-xl font-bold mb-4">メニュー</h2>
-            <a href="/" class="active">ホーム</a>
-            <a href="inventory.html">在庫管理</a>
-            <a href="orders.html">注文管理</a>
-            <a href="/head_chef">料理長</a>
+            <h2 class="text-xl font-bold mb-4">👨‍🍳 厨房 KDS</h2>
+            <a href="/" class="{% if request.path == '/' %}active{% endif %}">ホーム</a>
+            <a href="inventory.html" class="{% if request.path == '/inventory' %}active{% endif %}">在庫管理</a>
+            <a href="orders.html" class="{% if request.path == '/orders' %}active{% endif %}">注文管理</a>
+            <a href="/head_chef" class="{% if request.path == '/head_chef' %}active{% endif %}">料理長</a>
             <!-- <a href="settings.html">設定</a> -->
         </nav>
 
-        <!-- 主体内容 -->
-        <div class="flex-1 p-6">
-            {% block content %}{% endblock %}
+        <!-- 主体部分（左侧菜单 + 内容） -->
+        <div class="flex flex-1 flex-col">
+            <!-- 顶部导航栏 -->
+            <header class="fixed top-0 left-56 right-0 flex items-center justify-between p-4 shadow z-50">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-lg">👨‍🍳</div>
+                    <h1 class="text-2xl font-bold">スマート厨房 KDS システム</h1>
+                </div>
+
+                <div class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 rounded-lg px-3 py-1">
+                        <img src="{{ url_for('static', filename='user.png') }}" alt="User" class="w-8 h-8 rounded-full">
+                        <span>{{ session.get('nickname', '未登录') }}</span>
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div id="userDropdown"
+                        class="hidden absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg z-50">
+                        <a href="/settings" class="block px-4 py-2 text-red-600 hover:bg-gray-100">設定</a>
+                        <hr>
+                        <a href="/logout" class="block px-4 py-2 text-red-600 hover:bg-red-50">ログアウト</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 主体内容 -->
+            <main class="flex-1 p-6 mt-16">
+                {% block content %}{% endblock %}
+            </main>
         </div>
-    </div>
 
-    {% block model %}{% endblock %}
+        {% block model %}{% endblock %}
 
-    <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
-    <script src="{{ url_for('static', filename='index.js') }}"></script>
-    {% block js %}{% endblock %}
+        <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
+        <script src="{{ url_for('static', filename='index.js') }}"></script>
+        {% block js %}{% endblock %}
+        <script>
+            $(document).ready(function () {
+                $('#userMenuButton').on('click', function () {
+                    $('#userDropdown').toggleClass('hidden');
+                });
+
+                // 点击外部区域关闭菜单
+                $(document).on('click', function (e) {
+                    if (!$(e.target).closest('#userMenuButton, #userDropdown').length) {
+                        $('#userDropdown').addClass('hidden');
+                    }
+                });
+            });
+
+        </script>
 </body>
 
 </html>

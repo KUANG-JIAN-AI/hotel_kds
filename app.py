@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, render_template
-from controllers.chefs import create, list
+from flask import Flask, redirect, render_template, request, session
+from controllers.chefs import create, login_act
 from models import db, Chefs
+from utils import login_required
 
 
 app = Flask(__name__)
@@ -15,8 +16,9 @@ db.init_app(app)
 
 
 @app.route("/")
+@login_required
 def index():
-    return render_template("index.html")
+    return render_template("index.html", request=request)
 
 
 @app.route("/form")
@@ -24,25 +26,39 @@ def form():
     return render_template("form.html")
 
 
-@app.route("/head_chef")
+@app.route("/head_chef", methods=["GET"])
+@login_required
 def head_chef():
     chefs = Chefs.query.order_by(Chefs.id.desc()).all()
-    return render_template("head_chef.html", chefs=chefs)
+    return render_template("head_chef.html", chefs=chefs, request=request)
 
 
 @app.route("/head_chef", methods=["POST"])
+@login_required
 def create_chef():
     return create()
 
 
-@app.route("/head_chefs", methods=["GET"])
-def list_chef():
-    return list()
-
-
-@app.route("/login")
+@app.route("/login", methods=["GET"])
 def login():
     return render_template("login.html")
+
+
+@app.route("/login", methods=["POST"])
+def do_login():
+    return login_act()
+
+
+@app.route("/logout")
+def logout():
+    session.clear()  # 清除所有session数据
+    return redirect("/login")
+
+
+# 404 Not Found
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template("404.html"), 404
 
 
 if __name__ == "__main__":

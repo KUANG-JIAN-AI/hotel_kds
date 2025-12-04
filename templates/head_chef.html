@@ -28,7 +28,9 @@
                 <td class="text-slate-100">{{ chef.username }}</td>
                 <td class="text-slate-100">{{ chef.nickname }}</td>
                 <td class="text-slate-100">{{ chef.advice }}</td>
-                <td class="text-slate-100">{{ chef.status_text() }}</td>
+                <td class="text-slate-100"><span
+                        class="{% if chef.status == 1 %}status-normal{% else %}status-critical{% endif %}">{{
+                        chef.status_text() }}</span></td>
                 <td class="text-slate-100">
                     <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
                         onclick="editChef('{{ chef.id }}')">编辑</button>
@@ -147,10 +149,10 @@
             <td class="text-slate-100">${chef.username}</td>
             <td class="text-slate-100">${chef.nickname}</td>
             <td class="text-slate-100">${chef.advice}</td>
-            <td class="text-slate-100">${chef.status_text}</td>
-            <td>
-                <button onclick="editChef(${chef.id})">编辑</button>
-                <button onclick="deleteChef(${chef.id})">删除</button>
+            <td class="text-slate-100"><span class="status-normal">${chef.status_text}</span></td>
+            <td class="text-slate-100">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow" onclick="editChef(${chef.id})">编辑</button>
+                <button class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow ml-2" onclick="deleteChef(${chef.id})">删除</button>
             </td>
         `;
 

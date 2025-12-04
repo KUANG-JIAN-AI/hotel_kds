@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>404 | ページが見つかりません - スマート厨房</title>
+    <link href="{{ url_for('static', filename='tailwind.min.css') }}" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #1e293b;
+            /* slate-800 */
+            color: #f1f5f9;
+            /* slate-100 */
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .chef-img {
+            width: 180px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+        }
+
+        @keyframes rotate404 {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(360deg);
+            }
+
+            100% {
+                transform: rotate(720deg);
+            }
+        }
+
+        .rotate-0 {
+            display: inline-block;
+            animation: rotate404 4s linear infinite;
+            color: #60a5fa;
+            /* 蓝色 */
+            text-shadow: 0 0 8px rgba(96, 165, 250, 0.8);
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen">
+    <div class="text-center px-6">
+        <!-- <img src="{{ url_for('static', filename='chef_404.png') }}" alt="Chef" class="chef-img mx-auto mb-6"> -->
+        <h1 class="text-7xl font-extrabold mb-2 text-blue-400">
+            4 <span class="rotate-0">0</span> 4
+        </h1>
+        <p class="text-xl mb-4 text-slate-200">申し訳ありません。ページが見つかりませんでした。</p>
+        <p class="text-gray-400 mb-8">探しているページは移動されたか、削除された可能性があります。</p>
+
+        <a href="/"
+            class="bg-blue-500 hover:bg-blue-600 transition-colors px-5 py-2 rounded-lg font-semibold shadow text-white">
+            🏠 ホームに戻る
+        </a>
+    </div>
+
+    <footer class="absolute bottom-4 text-gray-500 text-sm">
+        © 2025 スマート厨房 KDS システム
+    </footer>
+</body>
+
+</html>
