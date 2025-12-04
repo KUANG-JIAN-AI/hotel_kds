@@ -1,1 +1,4 @@
 Flask
+flask-sqlalchemy
+pymysql
+tzdata

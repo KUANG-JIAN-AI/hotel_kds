@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">🍽️ 厨师长</h1>
+    <button id="add-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg">
+        ➕ 添加厨师长
+    </button>
+</div>
+
+<div class="overflow-x-auto">
+    <table id="chef-table" class="min-w-full bg-slate-800 rounded-lg shadow-lg">
+        <thead>
+            <tr>
+                <th class="text-left text-slate-200">ID</th>
+                <th class="text-left text-slate-200">账号</th>
+                <th class="text-left text-slate-200">昵称</th>
+                <th class="text-left text-slate-200">备注</th>
+                <th class="text-left text-slate-200">状态</th>
+                <th class="text-left text-slate-200">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chef in chefs %}
+            <tr id="chef-row-{{ chef.id }}">
+                <td class="text-slate-100">{{ chef.id }}</td>
+                <td class="text-slate-100">{{ chef.username }}</td>
+                <td class="text-slate-100">{{ chef.nickname }}</td>
+                <td class="text-slate-100">{{ chef.advice }}</td>
+                <td class="text-slate-100">{{ chef.status_text() }}</td>
+                <td class="text-slate-100">
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                        onclick="editChef('{{ chef.id }}')">编辑</button>
+                    <button
+                        class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow ml-2"
+                        onclick="deleteChef('{{ chef.id }}')">删除</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-slate-400 text-center">暂无数据</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+
+{% block model %}
+<!-- 弹窗 -->
+<div id="modal" class="fixed inset-0 hidden items-center justify-center modal-overlay z-50">
+    <div class="bg-slate-800 p-6 rounded-lg w-96 shadow-lg">
+        <h2 class="text-xl font-bold mb-4">添加厨师长</h2>
+        <form id="add-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-200 mb-1">账号</label>
+                <input type="text" id="chef-username" class="modal-input" placeholder="请输入账号" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">密码</label>
+                <input type="text" id="chef-password" class="modal-input" placeholder="请输入密码" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">名字</label>
+                <input type="text" id="chef-nickname" class="modal-input" placeholder="请输入名字" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">状态</label>
+                <select id="chef-status" class="modal-select" required>
+                    <option value="1" selected>正常</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">备注</label>
+                <input type="text" id="chef-advice" class="modal-input" placeholder="请输入备注">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="cancel-btn" class="modal-btn modal-btn-cancel">取消</button>
+                <button type="submit" class="modal-btn modal-btn-primary">添加</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    const addBtn = document.getElementById('add-btn');
+    const modal = document.getElementById('modal');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const addForm = document.getElementById('add-form');
+    const tableBody = document.querySelector('#chef-table tbody');
+
+    addBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    });
+
+    addForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('chef-username').value;
+        const password = document.getElementById('chef-password').value;
+        const nickname = document.getElementById('chef-nickname').value;
+        const status = document.getElementById('chef-status').value;
+        const advice = document.getElementById('chef-advice').value;
+
+        // --------------------------
+        // 发送 AJAX 请求到后端
+        fetch('/head_chef', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, password: password, nickname: nickname, status: status, advice: advice })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    // 隐藏表单
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    addForm.reset();
+
+                    success_alert(data.msg);
+                    appendChefRow(data.data);  // ✅ 动态插入到表格
+                } else {
+                    error_alert(data.msg);
+                }
+            })
+            .catch(err => console.error('请求失败', err));
+        // --------------------------
+    });
+
+    // ✅ 动态添加一行到表格
+    function appendChefRow(chef) {
+        const newRow = document.createElement("tr");
+        newRow.id = `chef-row-${chef.id}`;
+        newRow.innerHTML = `
+            <td class="text-slate-100">${chef.id}</td>
+            <td class="text-slate-100">${chef.username}</td>
+            <td class="text-slate-100">${chef.nickname}</td>
+            <td class="text-slate-100">${chef.advice}</td>
+            <td class="text-slate-100">${chef.status_text}</td>
+            <td>
+                <button onclick="editChef(${chef.id})">编辑</button>
+                <button onclick="deleteChef(${chef.id})">删除</button>
+            </td>
+        `;
+
+        // 在顶部插入新数据（如果你希望最新的显示在最上面）
+        tableBody.prepend(newRow);
+    }
+
+    function editChef(id) {
+        alert(id);
+    }
+
+    function deleteChef(id) {
+        alert(id);
+    }
+</script>
+{% endblock %}

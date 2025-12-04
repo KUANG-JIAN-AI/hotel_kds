@@ -16,8 +16,8 @@
             <a href="/" class="active">ホーム</a>
             <a href="inventory.html">在庫管理</a>
             <a href="orders.html">注文管理</a>
-            <a href="reports.html">レポート</a>
-            <a href="settings.html">設定</a>
+            <a href="/head_chef">料理長</a>
+            <!-- <a href="settings.html">設定</a> -->
         </nav>
 
         <!-- 主体内容 -->
@@ -27,6 +27,10 @@
     </div>
 
     {% block model %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
     {% block js %}{% endblock %}
 </body>
 
