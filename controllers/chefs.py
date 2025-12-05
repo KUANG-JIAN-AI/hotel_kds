@@ -20,9 +20,10 @@ def login_act():
         return jsonify({"code": 401, "msg": "用户名或密码错误"}), 401
 
     if chef.status == 2:
-        return jsonify({"code": 401, "msg": "用户已离职"}), 403
+        return jsonify({"code": 402, "msg": "用户已离职"}), 401
 
     # ✅ 写入 session
+    session.permanent = True
     session["user_id"] = chef.id
     session["username"] = chef.username
     session["nickname"] = chef.nickname
@@ -30,7 +31,7 @@ def login_act():
     return jsonify({"code": 200, "msg": "success", "data": chef.to_dict()}), 200
 
 
-def create():
+def add_chef():
     data = request.get_json(silent=True) or {}
 
     username = data.get("username", "").strip()
@@ -40,20 +41,20 @@ def create():
     advice = data.get("advice", "").strip()
 
     if not username:
-        return jsonify({"code": 400, "msg": "用户名不能为空"})
+        return jsonify({"code": 400, "msg": "用户名不能为空"}), 400
     if not password:
-        return jsonify({"code": 400, "msg": "密码不能为空"})
+        return jsonify({"code": 400, "msg": "密码不能为空"}), 400
 
     # 检查是否已存在
     if Chefs.query.filter_by(username=username).first():
-        return jsonify({"code": 400, "msg": "用户名已存在"})
+        return jsonify({"code": 409, "msg": "用户名已存在"}), 409
 
     try:
         chef = Chefs(username=username, nickname=nickname, status=status, advice=advice)
         chef.set_password(password)
         db.session.add(chef)
         db.session.commit()
-        return jsonify({"code": 200, "msg": "success", "data": chef.to_dict()})
+        return jsonify({"code": 200, "msg": "success", "data": chef.to_dict()}), 200
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"})
+        return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500

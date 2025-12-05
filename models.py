@@ -65,3 +65,60 @@ class Chefs(db.Model):
 
     def __repr__(self):
         return f"<Chefs {self.id}>"
+
+
+class Foods(db.Model):
+    __tablename__ = "foods"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    weight = db.Column(db.Integer)
+    decay_rate = db.Column(db.Integer)
+    warning_threshold = db.Column(db.Integer)
+    critical_threshold = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
+        nullable=False,
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
+        onupdate=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
+        nullable=False,
+    )
+    deleted_at = db.Column(db.DateTime, nullable=True)
+
+    def status_text(self):
+        """返回状态对应的文字"""
+        mapping = {
+            1: "正常",
+        }
+        return mapping.get(self.status, "未知")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category,
+            "weight": self.weight,
+            "decay_rate": self.decay_rate,
+            "warning_threshold": self.warning_threshold,
+            "critical_threshold": self.critical_threshold,
+            "status": self.status,
+            "status_text": self.status_text(),  # ✅ 新增文字版
+            "created_at": (
+                self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.created_at
+                else None
+            ),
+            "updated_at": (
+                self.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.updated_at
+                else None
+            ),
+        }
+
+    def __repr__(self):
+        return f"<Foods {self.id}>"

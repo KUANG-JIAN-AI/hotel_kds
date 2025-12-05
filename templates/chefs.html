@@ -62,7 +62,7 @@
             </div>
             <div>
                 <label class="block text-slate-200 mb-1">密码</label>
-                <input type="text" id="chef-password" class="modal-input" placeholder="请输入密码" required>
+                <input type="password" id="chef-password" class="modal-input" placeholder="请输入密码" required>
             </div>
             <div>
                 <label class="block text-slate-200 mb-1">名字</label>
@@ -115,7 +115,7 @@
 
         // --------------------------
         // 发送 AJAX 请求到后端
-        fetch('/head_chef', {
+        fetch('/chef', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

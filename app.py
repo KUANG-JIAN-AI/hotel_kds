@@ -1,10 +1,15 @@
+from datetime import timedelta
 from flask import Flask, redirect, render_template, request, session
-from controllers.chefs import create, login_act
-from models import db, Chefs
+from controllers.chefs import add_chef, login_act
+from controllers.foods import add_food
+from models import Foods, db, Chefs
 from utils import login_required
 
 
 app = Flask(__name__)
+
+app.permanent_session_lifetime = timedelta(hours=6)  # 登录有效期6小时
+
 
 # --- DATABASE ---
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@localhost/hotel_kds"
@@ -26,17 +31,29 @@ def form():
     return render_template("form.html")
 
 
-@app.route("/head_chef", methods=["GET"])
+@app.route("/chefs", methods=["GET"])
 @login_required
-def head_chef():
+def chefs():
     chefs = Chefs.query.order_by(Chefs.id.desc()).all()
-    return render_template("head_chef.html", chefs=chefs, request=request)
+    return render_template("chefs.html", chefs=chefs, request=request)
 
 
-@app.route("/head_chef", methods=["POST"])
+@app.route("/foods", methods=["GET"])
+@login_required
+def foods():
+    foods = Foods.query.order_by(Foods.id.desc()).all()
+    return render_template("foods.html", foods=foods, request=request)
+
+@app.route("/food", methods=["POST"])
+@login_required
+def create_food():
+    return add_food()
+
+
+@app.route("/chef", methods=["POST"])
 @login_required
 def create_chef():
-    return create()
+    return add_chef()
 
 
 @app.route("/login", methods=["GET"])

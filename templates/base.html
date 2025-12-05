@@ -14,9 +14,9 @@
         <nav class="sidebar flex flex-col p-4">
             <h2 class="text-xl font-bold mb-4">👨‍🍳 厨房 KDS</h2>
             <a href="/" class="{% if request.path == '/' %}active{% endif %}">ホーム</a>
-            <a href="inventory.html" class="{% if request.path == '/inventory' %}active{% endif %}">在庫管理</a>
-            <a href="orders.html" class="{% if request.path == '/orders' %}active{% endif %}">注文管理</a>
-            <a href="/head_chef" class="{% if request.path == '/head_chef' %}active{% endif %}">料理長</a>
+            <a href="/statistics" class="{% if request.path == '/inventory' %}active{% endif %}">統計</a>
+            <a href="/foods" class="{% if request.path == '/orders' %}active{% endif %}">食品管理</a>
+            <a href="/chefs" class="{% if request.path == '/head_chef' %}active{% endif %}">料理長</a>
             <!-- <a href="settings.html">設定</a> -->
         </nav>
 
