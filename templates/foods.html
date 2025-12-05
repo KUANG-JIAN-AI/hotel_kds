@@ -38,15 +38,17 @@
                         class="{% if food.status == 1 %}status-normal{% else %}status-critical{% endif %}">{{
                         food.status_text() }}</span></td>
                 <td class="text-slate-100">
+                    {% if food.is_today %}
+                    <button class="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                        onclick="delToday('{{ food.id }}')">下架</button>
+                    {% else %}
                     <button
                         class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
-                        onclick="listFood('{{ food.id }}')">上架</button>
-                    <button class="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
-                        onclick="delistFood('{{ food.id }}')">下架</button>
+                        onclick="addToday('{{ food.id }}')">上架</button>
+                    {% endif %}
                     <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
                         onclick="editFood('{{ food.id }}')">编辑</button>
-                    <button
-                        class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow ml-2"
+                    <button class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
                         onclick="deleteFood('{{ food.id }}')">删除</button>
                 </td>
             </tr>
@@ -175,8 +177,10 @@
             <td class="text-slate-100">${food.critical_threshold}</td>
             <td class="text-slate-100"><span class="status-normal">${food.status_text}</span></td>
             <td class="text-slate-100">
+                <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                        onclick="addToday(${food.id})">上架</button>
                 <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow" onclick="editFood(${food.id})">编辑</button>
-                <button class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow ml-2" onclick="deleteFood(${food.id})">删除</button>
+                <button class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow" onclick="deleteFood(${food.id})">删除</button>
             </td>
         `;
 
@@ -184,10 +188,10 @@
         tableBody.prepend(newRow);
     }
 
-    function listFood(id) {
+    function addToday(id) {
         // --------------------------
         // 发送 AJAX 请求到后端
-        fetch('/food_list', {
+        fetch('/add_today', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -206,7 +210,7 @@
         // --------------------------
     }
 
-    function delistFood(id) {
+    function delToday(id) {
 
     }
 

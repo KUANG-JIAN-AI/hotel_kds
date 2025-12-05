@@ -15,15 +15,22 @@ def add_food():
     critical_threshold = data.get("critical_threshold", 0)
     status = data.get("status", 1)
 
-    if (
-        not name
-        or not category
-        or not weight
-        or not decay_rate
-        or not warning_threshold
-        or not critical_threshold
-    ):
-        return jsonify({"code": 400, "msg": "必填项不能为空"}), 400
+    # 必填项校验
+    required_fields = [
+        "name",
+        "category",
+        "weight",
+        "decay_rate",
+        "warning_threshold",
+        "critical_threshold",
+    ]
+    missing = [f for f in required_fields if not str(data.get(f, "")).strip()]
+    if missing:
+        return jsonify({"code": 400, "msg": f"缺少必填项：{', '.join(missing)}"}), 400
+
+        # 检查是否已存在
+    if Foods.query.filter_by(name=name).first():
+        return jsonify({"code": 409, "msg": "菜品已存在"}), 409
 
     try:
         food = Foods(

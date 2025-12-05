@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from flask import Flask, redirect, render_template, request, session
 from controllers.chefs import add_chef, login_act
 from controllers.foods import add_food
-from models import Foods, db, Chefs
+from controllers.today_foods import add_today_food
+from models import Foods, TodayFoods, db, Chefs
 from utils import login_required
 
 
@@ -38,11 +39,28 @@ def chefs():
     return render_template("chefs.html", chefs=chefs, request=request)
 
 
+@app.route("/chef", methods=["POST"])
+@login_required
+def create_chef():
+    return add_chef()
+
+
 @app.route("/foods", methods=["GET"])
 @login_required
 def foods():
+    today = date.today()
+
+    # 1️⃣ 查出所有菜品
     foods = Foods.query.order_by(Foods.id.desc()).all()
+
+    # 2️⃣ 查出今天的菜品 id 集合
+    today_food_ids = {tf.food_id for tf in TodayFoods.query.filter_by(record_date=today).all()}
+
+    # 3️⃣ 遍历打标
+    for food in foods:
+        food.is_today = food.id in today_food_ids
     return render_template("foods.html", foods=foods, request=request)
+
 
 @app.route("/food", methods=["POST"])
 @login_required
@@ -50,10 +68,10 @@ def create_food():
     return add_food()
 
 
-@app.route("/chef", methods=["POST"])
+@app.route("/add_today", methods=["POST"])
 @login_required
-def create_chef():
-    return add_chef()
+def add_today():
+    return add_today_food()
 
 
 @app.route("/login", methods=["GET"])

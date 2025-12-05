@@ -122,3 +122,57 @@ class Foods(db.Model):
 
     def __repr__(self):
         return f"<Foods {self.id}>"
+
+
+class TodayFoods(db.Model):
+    __tablename__ = "today_foods"
+    id = db.Column(db.Integer, primary_key=True)
+    food_id = db.Column(db.Integer, db.ForeignKey("foods.id"))
+    total_weight = db.Column(db.Integer)
+    current_weight = db.Column(db.Integer)
+    record_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.Integer)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
+        nullable=False,
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
+        onupdate=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
+        nullable=False,
+    )
+    deleted_at = db.Column(db.DateTime, nullable=True)
+    food = db.relationship("Foods", backref="today_foods")
+
+    def status_text(self):
+        """返回状态对应的文字"""
+        mapping = {
+            1: "上架",
+        }
+        return mapping.get(self.status, "未知")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "food_id": self.food_id,
+            "total_weight": self.total_weight,
+            "current_weight": self.current_weight,
+            "record_date": self.record_date,
+            "status": self.status,
+            "status_text": self.status_text(),  # ✅ 新增文字版
+            "created_at": (
+                self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.created_at
+                else None
+            ),
+            "updated_at": (
+                self.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.updated_at
+                else None
+            ),
+        }
+
+    def __repr__(self):
+        return f"<TodayFoods {self.id}>"
