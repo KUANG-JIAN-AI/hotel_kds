@@ -4,6 +4,40 @@ from sqlalchemy.exc import SQLAlchemyError
 from models import Foods, TodayFoods, db
 
 
+def get_today_foods():
+    today = date.today()
+    foods = (
+        TodayFoods.query.filter_by(record_date=today)
+        .join(Foods, TodayFoods.food_id == Foods.id)
+        .order_by(TodayFoods.id.desc())
+        .all()
+    )
+
+    data = [f.to_dict() for f in foods]
+    # 🔢 统计数量
+    total = len(data)
+    warning = sum(1 for f in data if f["remain"] == 1)
+    critical = sum(1 for f in data if f["remain"] == 2)
+    empty = sum(1 for f in data if f["remain"] == 3)
+
+    return (
+        jsonify(
+            {
+                "code": 200,
+                "msg": "success",
+                "data": data,
+                "stats": {
+                    "total": total,
+                    "warning": warning,
+                    "critical": critical,
+                    "empty": empty,
+                },
+            }
+        ),
+        200,
+    )
+
+
 def add_today_food():
     data = request.get_json(silent=True) or {}
 
@@ -24,6 +58,7 @@ def add_today_food():
             current_weight=food.weight,
             record_date=date.today(),
             status=1,
+            remain=0,
         )
         db.session.add(today_food)
         db.session.commit()

@@ -7,8 +7,9 @@
         <h1 class="text-2xl font-bold">今日の食事</h1>
     </div>
     <div class="flex items-center gap-3">
+        <div id="warning-count" class="px-3 py-2 rounded-lg bg-yellow-900/30 text-yellow-400">⏰ 0</div>
         <div id="critical-count" class="px-3 py-2 rounded-lg bg-red-900/30 text-red-400">⚠️ 0</div>
-        <div id="warning-count" class="px-3 py-2 rounded-lg bg-yellow-900/30 text-yellow-400">🔔 0</div>
+        <div id="empty-count" class="px-3 py-2 rounded-lg bg-red-900/30 text-yellow-400">❌ 0</div>
         <button id="toggle-btn" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600">一時停止</button>
     </div>
 </header>
@@ -25,74 +26,79 @@
         alert: "⚠️",
         check: "✅",
         clock: "⏰",
-        refresh: "🔄"
+        refresh: "🔄",
+        chef: "👨‍🍳",
+        bell: "🔔",
+        spark: "✨",
+        close: "❌",
+        load: "🔄"
     };
 
-    const INITIAL_DISHES = [
-        { id: 1, name: 'オーストラリア産ロブスター', weight: 100, status: 'normal', decayRate: 0.8 },
-        { id: 2, name: 'ブラックペッパービーフ', weight: 85, status: 'normal', decayRate: 1.2 },
-        { id: 3, name: 'フォアグラ', weight: 45, status: 'warning', decayRate: 1.5 },
-        { id: 4, name: '海鮮チャーハン', weight: 90, status: 'normal', decayRate: 0.5 },
-        { id: 5, name: 'ティラミス', weight: 20, status: 'critical', decayRate: 0.9 },
-        { id: 6, name: 'ボルシチ', weight: 60, status: 'normal', decayRate: 1.0 },
-        { id: 7, name: 'シーザーサラダ', weight: 15, status: 'critical', decayRate: 0.7 },
-        { id: 8, name: 'ラムチョップ', weight: 75, status: 'normal', decayRate: 1.1 },
-    ];
+    // const INITIAL_DISHES = [
+    //     { id: 1, name: 'オーストラリア産ロブスター', weight: 100, status: 'normal', decayRate: 0.8 },
+    //     { id: 2, name: 'ブラックペッパービーフ', weight: 85, status: 'normal', decayRate: 1.2 },
+    //     { id: 3, name: 'フォアグラ', weight: 45, status: 'warning', decayRate: 1.5 },
+    //     { id: 4, name: '海鮮チャーハン', weight: 90, status: 'normal', decayRate: 0.5 },
+    //     { id: 5, name: 'ティラミス', weight: 20, status: 'critical', decayRate: 0.9 },
+    //     { id: 6, name: 'ボルシチ', weight: 60, status: 'normal', decayRate: 1.0 },
+    //     { id: 7, name: 'シーザーサラダ', weight: 15, status: 'critical', decayRate: 0.7 },
+    //     { id: 8, name: 'ラムチョップ', weight: 75, status: 'normal', decayRate: 1.1 },
+    // ];
 
-    const WARNING_THRESHOLD = 40;
-    const CRITICAL_THRESHOLD = 20;
+    // const WARNING_THRESHOLD = 40;
+    // const CRITICAL_THRESHOLD = 20;
 
-    let dishes = [...INITIAL_DISHES];
+    // let dishes = [...INITIAL_DISHES];
     let isRunning = true;
-    let intervalId = null;
+    // let intervalId = null;
 
-    function renderDishes() {
-        const $grid = $("#dishes-grid");
-        $grid.empty();
+    // function renderDishes() {
+    //     const $grid = $("#dishes-grid");
+    //     $grid.empty();
 
-        dishes.forEach(dish => {
-            let cardClass = "card-bg";
-            let progressClass = "progress-normal";
-            let statusText = "十分";
-            let statusIcon = ICON.check;
+    //     dishes.forEach(dish => {
+    //         let cardClass = "card-bg";
+    //         let progressClass = "progress-normal";
+    //         let statusText = "十分";
+    //         let statusIcon = ICON.check;
 
-            if (dish.status === "warning") {
-                cardClass = "warning-bg";
-                progressClass = "progress-warning";
-                statusText = "補充推奨";
-                statusIcon = ICON.clock;
-            } else if (dish.status === "critical") {
-                cardClass = "critical-bg";
-                progressClass = "progress-critical";
-                statusText = "至急補充";
-                statusIcon = ICON.alert;
-            } else if (dish.status === "empty") {
-                cardClass = "empty-bg";
-                progressClass = "progress-empty";
-                statusText = "売り切れ";
-                statusIcon = ICON.alert;
-            }
+    //         if (dish.status === "warning") {
+    //             cardClass = "warning-bg";
+    //             progressClass = "progress-warning";
+    //             statusText = "補充推奨";
+    //             statusIcon = ICON.clock;
+    //         } else if (dish.status === "critical") {
+    //             cardClass = "critical-bg";
+    //             progressClass = "progress-critical";
+    //             statusText = "至急補充";
+    //             statusIcon = ICON.alert;
+    //         } else if (dish.status === "empty") {
+    //             cardClass = "empty-bg";
+    //             progressClass = "progress-empty";
+    //             statusText = "売り切れ";
+    //             statusIcon = ICON.alert;
+    //         }
 
-            const $dish = $(`
-          <div class="p-5 rounded-lg border-2 ${cardClass}">
-            <h3 class="text-lg font-bold mb-2">${dish.name}</h3>
-            <div class="h-3 w-full bg-slate-700 rounded-full overflow-hidden mb-3">
-              <div class="${progressClass} h-full transition-all duration-500" style="width:${Math.round(dish.weight)}%"></div>
-            </div>
-            <div class="flex justify-between items-center">
-              <div class="text-sm">${statusIcon} ${statusText}</div>
-              <button class="bg-slate-700 px-3 py-1 rounded-lg hover:bg-blue-600 refill-btn" data-id="${dish.id}">${ICON.refresh}</button>
-            </div>
-          </div>
-        `);
-            $grid.append($dish);
-        });
+    //         const $dish = $(`
+    //       <div class="p-5 rounded-lg border-2 ${cardClass}">
+    //         <h3 class="text-lg font-bold mb-2">${dish.name}</h3>
+    //         <div class="h-3 w-full bg-slate-700 rounded-full overflow-hidden mb-3">
+    //           <div class="${progressClass} h-full transition-all duration-500" style="width:${Math.round(dish.weight)}%"></div>
+    //         </div>
+    //         <div class="flex justify-between items-center">
+    //           <div class="text-sm">${statusIcon} ${statusText}</div>
+    //           <button class="bg-slate-700 px-3 py-1 rounded-lg hover:bg-blue-600 refill-btn" data-id="${dish.id}">${ICON.refresh}</button>
+    //         </div>
+    //       </div>
+    //     `);
+    //         $grid.append($dish);
+    //     });
 
-        const criticalCount = dishes.filter(d => d.status === "critical" || d.status === "empty").length;
-        const warningCount = dishes.filter(d => d.status === "warning").length;
-        $("#critical-count").text(`${ICON.alert} ${criticalCount}`);
-        $("#warning-count").text(`${ICON.clock} ${warningCount}`);
-    }
+    //     const criticalCount = dishes.filter(d => d.status === "critical" || d.status === "empty").length;
+    //     const warningCount = dishes.filter(d => d.status === "warning").length;
+    //     $("#critical-count").text(`${ICON.alert} ${criticalCount}`);
+    //     $("#warning-count").text(`${ICON.clock} ${warningCount}`);
+    // }
 
     function addNotification(msg) {
         const $note = $(`<div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-lg shadow">${msg}</div>`);
@@ -100,30 +106,31 @@
         setTimeout(() => $note.remove(), 3000);
     }
 
-    function decayDishes() {
-        dishes = dishes.map(d => {
-            if (d.weight <= 0) return { ...d, weight: 0, status: "empty" };
-            const change = Math.random() * d.decayRate;
-            const newWeight = Math.max(0, d.weight - change);
-            let status = "normal";
-            if (newWeight <= 0) status = "empty";
-            else if (newWeight <= CRITICAL_THRESHOLD) status = "critical";
-            else if (newWeight <= WARNING_THRESHOLD) status = "warning";
-            return { ...d, weight: newWeight, status };
-        });
-        renderDishes();
-    }
+    // function decayDishes() {
+    //     dishes = dishes.map(d => {
+    //         if (d.weight <= 0) return { ...d, weight: 0, status: "empty" };
+    //         const change = Math.random() * d.decayRate;
+    //         const newWeight = Math.max(0, d.weight - change);
+    //         let status = "normal";
+    //         if (newWeight <= 0) status = "empty";
+    //         else if (newWeight <= CRITICAL_THRESHOLD) status = "critical";
+    //         else if (newWeight <= WARNING_THRESHOLD) status = "warning";
+    //         return { ...d, weight: newWeight, status };
+    //     });
+    //     renderDishes();
+    // }
 
-    function startInterval() {
-        if (intervalId) clearInterval(intervalId);
-        if (isRunning) {
-            intervalId = setInterval(decayDishes, 1000);
-        }
-    }
+    // function startInterval() {
+    //     if (intervalId) clearInterval(intervalId);
+    //     if (isRunning) {
+    //         intervalId = setInterval(decayDishes, 1000);
+    //     }
+    // }
 
     $(document).ready(function () {
-        renderDishes();
-        startInterval();
+        // renderDishes();
+        loadDishes();
+        setInterval(loadDishes, 5000);
 
         $("#toggle-btn").click(function () {
             isRunning = !isRunning;
@@ -133,10 +140,75 @@
 
         $(document).on("click", ".refill-btn", function () {
             const id = parseInt($(this).data("id"));
-            dishes = dishes.map(d => d.id === id ? { ...d, weight: 100, status: "normal" } : d);
-            renderDishes();
+            // dishes = dishes.map(d => d.id === id ? { ...d, weight: 100, status: "normal" } : d);
+            // renderDishes();
             addNotification("✅ 補充完了");
         });
+
     });
+
+    function loadDishes() {
+        // --------------------------
+        // 发送 AJAX 请求到后端
+        fetch('/today_foods', {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    $("#warning-count").text(`${ICON.clock} ${data.stats.warning || 0}`);
+                    $("#critical-count").text(`${ICON.alert} ${data.stats.critical || 0}`);
+                    $("#empty-count").text(`${ICON.close} ${data.stats.empty || 0}`);
+
+                    const $grid = $("#dishes-grid");
+                    $grid.empty();
+
+                    data.data.forEach(d => {
+                        const f = d.food_info || {};
+                        let cardClass = "card-bg";
+                        let progressClass = "progress-normal";
+                        let statusText = "十分";
+                        let statusIcon = ICON.check;
+
+                        if (d.remain == 1) {
+                            cardClass = "warning-bg";
+                            progressClass = "progress-warning";
+                            statusText = "補充推奨";
+                            statusIcon = ICON.clock;
+                        } else if (d.remain == 2) {
+                            cardClass = "critical-bg";
+                            progressClass = "progress-critical";
+                            statusText = "至急補充";
+                            statusIcon = ICON.alert;
+                        } else if (d.remain == 3) {
+                            cardClass = "empty-bg";
+                            progressClass = "progress-empty";
+                            statusText = "売り切れ";
+                            statusIcon = ICON.close;
+                        }
+
+                        const $dish = $(`
+                        <div class="p-5 rounded-lg border-2 ${cardClass}">
+                            <h3 class="text-lg font-bold mb-2">${f.name}</h3>
+                            <div class="h-3 w-full bg-slate-700 rounded-full overflow-hidden mb-3">
+                            <div class="${progressClass} h-full transition-all duration-500" style="width:${Math.round(d.current_weight)}%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                            <div class="text-sm">${statusIcon} ${statusText}</div>
+                            <button class="bg-slate-700 px-3 py-1 rounded-lg hover:bg-blue-600 refill-btn" data-id="${d.id}">${ICON.refresh}</button>
+                            </div>
+                        </div>
+                        `);
+                        $grid.append($dish);
+                    });
+                } else {
+                    error_alert(data.msg);
+                }
+            })
+            .catch(err => console.error('请求失败', err));
+        // --------------------------
+    }
 </script>
 {% endblock %}

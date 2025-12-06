@@ -1,8 +1,10 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from flask import Flask, redirect, render_template, request, session
+from apscheduler.schedulers.background import BackgroundScheduler
 from controllers.chefs import add_chef, login_act
 from controllers.foods import add_food
-from controllers.today_foods import add_today_food
+from controllers.today_foods import add_today_food, get_today_foods
 from models import Foods, TodayFoods, db, Chefs
 from utils import login_required
 
@@ -19,6 +21,55 @@ app.config["SECRET_KEY"] = "ai_f_group"
 
 # --- 初始化数据库 ---
 db.init_app(app)
+
+scheduler = BackgroundScheduler(timezone="Asia/Tokyo")
+
+
+# 🕒 定时任务逻辑
+def decay_today_foods():
+    with app.app_context():
+        today = date.today()
+        now = datetime.now(ZoneInfo("Asia/Tokyo"))
+
+        today_foods = (
+            TodayFoods.query.filter_by(record_date=today)
+            .join(Foods, TodayFoods.food_id == Foods.id)
+            .all()
+        )
+
+        changed = False
+        for tf in today_foods:
+            if not tf.food:
+                continue
+            decay = tf.food.decay_rate or 0
+            if decay <= 0:
+                continue
+
+            # 🧮 计算衰减
+            if tf.current_weight > 0:
+                tf.current_weight = max(tf.current_weight - decay, 0)
+                changed = True
+
+            # 🚨 状态更新
+            if tf.current_weight <= 0:
+                tf.remain = 3  # 卖完
+            elif tf.current_weight <= (tf.food.critical_threshold or 20):
+                tf.remain = 2  # 危险
+            elif tf.current_weight <= (tf.food.warning_threshold or 40):
+                tf.remain = 1  # 警告
+            else:
+                tf.remain = 0  # 正常
+
+            tf.updated_at = now
+
+        if changed:
+            db.session.commit()
+            # print(f"[{now:%H:%M:%S}] 更新今日菜品衰减信息")
+
+
+# ⏰ 启动定时任务：每 5 秒执行一次
+scheduler.add_job(func=decay_today_foods, trigger="interval", seconds=5)
+scheduler.start()
 
 
 @app.route("/")
@@ -54,7 +105,9 @@ def foods():
     foods = Foods.query.order_by(Foods.id.desc()).all()
 
     # 2️⃣ 查出今天的菜品 id 集合
-    today_food_ids = {tf.food_id for tf in TodayFoods.query.filter_by(record_date=today).all()}
+    today_food_ids = {
+        tf.food_id for tf in TodayFoods.query.filter_by(record_date=today).all()
+    }
 
     # 3️⃣ 遍历打标
     for food in foods:
@@ -72,6 +125,12 @@ def create_food():
 @login_required
 def add_today():
     return add_today_food()
+
+
+@app.route("/today_foods", methods=["GET"])
+@login_required
+def today_foods():
+    return get_today_foods()
 
 
 @app.route("/login", methods=["GET"])

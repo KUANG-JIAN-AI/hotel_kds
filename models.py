@@ -132,6 +132,7 @@ class TodayFoods(db.Model):
     current_weight = db.Column(db.Integer)
     record_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.Integer)
+    remain = db.Column(db.Integer)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(ZoneInfo("Asia/Tokyo")),
@@ -144,6 +145,8 @@ class TodayFoods(db.Model):
         nullable=False,
     )
     deleted_at = db.Column(db.DateTime, nullable=True)
+
+    # 建立关联
     food = db.relationship("Foods", backref="today_foods")
 
     def status_text(self):
@@ -153,6 +156,16 @@ class TodayFoods(db.Model):
         }
         return mapping.get(self.status, "未知")
 
+    def remain_text(self):
+        """返回状态对应的文字"""
+        mapping = {
+            0: "正常",
+            1: "警告",
+            2: "危险",
+            3: "卖完",
+        }
+        return mapping.get(self.remain, "未知")
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -161,7 +174,12 @@ class TodayFoods(db.Model):
             "current_weight": self.current_weight,
             "record_date": self.record_date,
             "status": self.status,
+            "remain": self.remain,
             "status_text": self.status_text(),  # ✅ 新增文字版
+            "remain_text": self.remain_text(),  # ✅ 新增文字版
+            "record_date": (
+                self.record_date.strftime("%Y-%m-%d") if self.record_date else None
+            ),
             "created_at": (
                 self.created_at.strftime("%Y-%m-%d %H:%M:%S")
                 if self.created_at
@@ -172,6 +190,8 @@ class TodayFoods(db.Model):
                 if self.updated_at
                 else None
             ),
+            # ✅ 关键：包含 Foods 表的部分字段
+            "food_info": self.food.to_dict() if self.food else None,
         }
 
     def __repr__(self):
