@@ -1,6 +1,7 @@
 from datetime import date
 from flask import jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
 from models import Foods, TodayFoods, db
 
 
@@ -8,7 +9,8 @@ def get_today_foods():
     today = date.today()
     foods = (
         TodayFoods.query.filter_by(record_date=today)
-        .join(Foods, TodayFoods.food_id == Foods.id)
+        .filter_by(status=1)
+        .options(joinedload(TodayFoods.food))  # ✅ 一次性加载 Foods
         .order_by(TodayFoods.id.desc())
         .all()
     )
@@ -61,6 +63,40 @@ def add_today_food():
             remain=0,
         )
         db.session.add(today_food)
+        db.session.commit()
+        return (
+            jsonify({"code": 200, "msg": "success", "data": today_food.to_dict()}),
+            200,
+        )
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500
+
+
+def append_food():
+    data = request.get_json(silent=True) or {}
+
+    today_id = data.get("today_id", 0)
+
+    if not today_id:
+        return jsonify({"code": 400, "msg": "今日食品ID不存在"}), 400
+
+    today_food = TodayFoods.query.filter_by(id=today_id).first()
+
+    if not today_food or not today_food.food:
+        return jsonify({"code": 400, "msg": "今日食品不存在"}), 400
+
+    try:
+        # 从foods表取初始份量
+        add_weight = today_food.food.weight or 0
+
+        if add_weight <= 0:
+            return jsonify({"code": 400, "msg": "该菜品未设置初始份量，无法累加"}), 400
+
+        # 更新今日菜品重量
+        today_food.total_weight += add_weight
+        today_food.current_weight += add_weight
+
         db.session.commit()
         return (
             jsonify({"code": 200, "msg": "success", "data": today_food.to_dict()}),

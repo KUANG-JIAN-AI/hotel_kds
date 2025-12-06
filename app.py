@@ -1,10 +1,11 @@
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
-from flask import Flask, redirect, render_template, request, session
+from flask import Flask, jsonify, redirect, render_template, request, session
 from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy.orm import joinedload
 from controllers.chefs import add_chef, login_act
 from controllers.foods import add_food
-from controllers.today_foods import add_today_food, get_today_foods
+from controllers.today_foods import add_today_food, append_food, get_today_foods
 from models import Foods, TodayFoods, db, Chefs
 from utils import login_required
 
@@ -22,53 +23,62 @@ app.config["SECRET_KEY"] = "ai_f_group"
 # --- 初始化数据库 ---
 db.init_app(app)
 
-scheduler = BackgroundScheduler(timezone="Asia/Tokyo")
+is_decay_enabled = True
 
 
-# 🕒 定时任务逻辑
+# -----------------------
+# 衰减逻辑
+# -----------------------
 def decay_today_foods():
+    global is_decay_enabled
+    if not is_decay_enabled:
+        # 如果暂停标志为 False，直接跳过执行
+        return
+
     with app.app_context():
         today = date.today()
         now = datetime.now(ZoneInfo("Asia/Tokyo"))
-
         today_foods = (
-            TodayFoods.query.filter_by(record_date=today)
-            .join(Foods, TodayFoods.food_id == Foods.id)
+            TodayFoods.query.filter_by(record_date=today).filter_by(status=1)
+            .options(joinedload(TodayFoods.food))  # ✅ 一次性加载 Foods
             .all()
         )
-
         changed = False
         for tf in today_foods:
-            if not tf.food:
+            f = tf.food
+            if not f:
                 continue
-            decay = tf.food.decay_rate or 0
+            decay = f.decay_rate or 0
             if decay <= 0:
                 continue
 
-            # 🧮 计算衰减
-            if tf.current_weight > 0:
-                tf.current_weight = max(tf.current_weight - decay, 0)
-                changed = True
+            # 减少重量
+            tf.current_weight = max(tf.current_weight - decay, 0)
 
-            # 🚨 状态更新
+            # 状态更新
             if tf.current_weight <= 0:
                 tf.remain = 3  # 卖完
-            elif tf.current_weight <= (tf.food.critical_threshold or 20):
+            elif tf.current_weight <= f.critical_threshold:
                 tf.remain = 2  # 危险
-            elif tf.current_weight <= (tf.food.warning_threshold or 40):
+            elif tf.current_weight <= f.warning_threshold:
                 tf.remain = 1  # 警告
             else:
                 tf.remain = 0  # 正常
 
             tf.updated_at = now
+            changed = True
 
         if changed:
             db.session.commit()
-            # print(f"[{now:%H:%M:%S}] 更新今日菜品衰减信息")
+            print(f"[{now:%H:%M:%S}] 更新菜品衰减信息")
 
 
+# -----------------------
+# APScheduler 启动
 # ⏰ 启动定时任务：每 5 秒执行一次
-scheduler.add_job(func=decay_today_foods, trigger="interval", seconds=5)
+# -----------------------
+scheduler = BackgroundScheduler(timezone="Asia/Tokyo")
+scheduler.add_job(decay_today_foods, "interval", seconds=5, id="decay_task")
 scheduler.start()
 
 
@@ -133,6 +143,12 @@ def today_foods():
     return get_today_foods()
 
 
+@app.route("/append_today_food", methods=["POST"])
+@login_required
+def append_today_food():
+    return append_food()
+
+
 @app.route("/login", methods=["GET"])
 def login():
     return render_template("login.html")
@@ -155,5 +171,28 @@ def not_found_error(error):
     return render_template("404.html"), 404
 
 
+@app.route("/toggle_decay", methods=["POST"])
+def toggle_decay():
+    """前端点击按钮时调用，暂停或恢复衰减任务"""
+
+    print("当前任务：", scheduler.get_jobs())
+    global is_decay_enabled
+
+    job = scheduler.get_job("decay_task")
+    if job.next_run_time:  # 正在运行中 → 暂停
+        scheduler.pause_job("decay_task")
+        is_decay_enabled = False  # 🧩 同步关闭任务执行
+        status = "paused"
+    else:
+        scheduler.resume_job("decay_task")
+        is_decay_enabled = True  # 🧩 同步开启任务执行
+        status = "running"
+
+    print(f"当前衰减状态: {status}, 启动标志: {is_decay_enabled}")
+    return jsonify({"code": 200, "msg": "success", "status": status})
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=9000)
+    with app.app_context():
+        db.create_all()  # ✅ 建库 + 确保上下文绑定
+    app.run(debug=True, port=9000, use_reloader=False)
