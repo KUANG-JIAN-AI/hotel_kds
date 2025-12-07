@@ -1,5 +1,6 @@
-from datetime import date
+from datetime import date, timedelta
 from flask import jsonify, request
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from models import Foods, TodayFoods, db
@@ -105,3 +106,32 @@ def append_food():
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500
+
+
+def stats():
+    """获取近30天菜品重量统计"""
+    today = date.today()
+    start_date = today - timedelta(days=30)
+
+    results = (
+        db.session.query(
+            TodayFoods.record_date,
+            Foods.name,
+            func.sum(TodayFoods.total_weight).label("total_weight"),
+        )
+        .join(Foods, TodayFoods.food_id == Foods.id)
+        .filter(TodayFoods.record_date >= start_date)
+        .group_by(TodayFoods.record_date, Foods.name)
+        .order_by(TodayFoods.record_date)
+        .all()
+    )
+
+    data = {}
+    for r in results:
+        date_str = r.record_date.strftime("%m-%d")
+        if date_str not in data:
+            data[date_str] = {}
+        data[date_str][r.name] = r.total_weight
+
+    food_names = sorted({r.name for r in results})
+    return data, food_names

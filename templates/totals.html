@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">📊 近30天菜品统计</h1>
+
+    <div class="space-x-2">
+        <button id="toggleChartTypeBtn"
+            class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-4 py-2 rounded-md transition">
+            切换为折线图
+        </button>
+    </div>
+</div>
+
+<div class="overflow-x-auto">
+    <div class="bg-gray-800 p-4 rounded-2xl shadow-md min-h-[calc(100vh-120px)]">
+        <canvas id="dailyChart" class="w-full h-full"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(function () {
+    const chartData = {{ data|default({})|tojson }};
+    const allFoods = {{ foods|default([])|tojson }};
+    const labels = Object.keys(chartData);
+    const getColor = () => `hsl(${Math.floor(Math.random()*360)},70%,60%)`;
+
+    // 🔹 构建所有菜品数据集
+    const fullDatasets = allFoods.map(food => {
+        const dataPoints = labels.map(date => chartData[date][food] || 0);
+        return {
+            label: food,
+            data: dataPoints,
+            backgroundColor: getColor(),
+            stack: 'total',
+            yAxisID: 'y'
+        };
+    });
+
+    // 🔹 过滤掉全为 0 的菜品
+    const filteredDatasets = fullDatasets.filter(ds => ds.data.some(v => v > 0));
+
+    // 🔹 计算每日总重量折线数据
+    const totalLineData = labels.map(date => {
+        const dayData = chartData[date];
+        if (!dayData) return 0;
+        return Object.values(dayData)
+            .map(v => Number(v) || 0)   // ✅ 强制转换为数字
+            .reduce((a, b) => a + b, 0);
+    });
+
+    // 🔹 添加折线图（总量趋势）
+    const totalLineDataset = {
+        label: '総重量',
+        data: totalLineData,
+        type: 'line',
+        borderColor: '#f472b6',
+        backgroundColor: '#f472b6',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false,
+        yAxisID: 'y1' // ✅ 使用右侧轴
+    };
+
+     let chartType = 'bar'; // 当前图表类型
+
+    // 🔹 初始化 Chart.js
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [...filteredDatasets, totalLineDataset]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+
+            // ✅ 动画配置
+            animation: {
+                duration: 1200,
+                easing: 'easeInOutCubic'
+            },
+            transitions: {
+                show: { animations: { x: { from: 0 }, y: { from: 0 } } },
+                hide: { animations: { x: { to: 0 }, y: { to: 0 } } }
+            },
+
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { color: '#d1d5db' },
+                    grid: { color: '#374151' }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: { color: '#d1d5db' },
+                    grid: { color: '#374151' },
+                    title: { display: true, text: '各料理重量(g)', color: '#9ca3af' }
+                },
+                y1: {
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: { drawOnChartArea: false },
+                    ticks: { color: '#f472b6' },
+                    title: { display: true, text: '総重量(g)', color: '#f472b6' }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#e5e7eb' },
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: '近30天菜品重量与总量趋势',
+                    color: '#f9fafb',
+                    font: { size: 18 }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        // ✅ tooltip内容过滤掉为0的菜品，并显示总量
+                        label: function (ctx) {
+                            if (ctx.dataset.label === '総重量') {
+                                const val = Number(ctx.dataset.data[ctx.dataIndex]) || 0;
+                                return `総重量: ${val} g`;
+                            }
+                            const val = Number(ctx.parsed.y) || 0;
+                            return val > 0 ? `${ctx.dataset.label}: ${val} g` : null;
+                        },
+                        afterBody: function (items) {
+                            const total = items
+                                .filter(i => i.dataset.label !== '総重量')
+                                .reduce((sum, i) => sum + Number(i.parsed?.y || 0), 0);
+                            return `合計: ${total} g`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 🔘 切换图表类型（柱形 <-> 折线）
+    $('#toggleChartTypeBtn').on('click', function () {
+        if (chartType === 'bar') {
+            // 切换为折线图
+            chartType = 'line';
+            // 过滤掉全为0的菜品
+            const nonZeroLineDatasets = fullDatasets
+                .filter(ds => ds.data.some(v => v > 0))
+                .map(ds => ({
+                    ...ds,
+                    type: 'line',
+                    fill: false,
+                    borderWidth: 2,
+                    borderColor: ds.backgroundColor,
+                    yAxisID: 'y',
+                    tension: 0.3,           // ✅ 曲线平滑度
+                    pointRadius: 3,         // ✅ 小圆点
+                    pointHoverRadius: 5
+                }));
+
+            // 把数据集替换为：非零菜品折线 + 总重量折线
+            chart.data.datasets = [...nonZeroLineDatasets, totalLineDataset];
+            
+            $(this).text('切换为柱形图');
+
+            // 🪄 平滑过渡动画
+            chart.update({
+                duration: 1000,
+                easing: 'easeInOutCubic'
+            });
+        } else {
+            // 切换回堆叠柱形图
+            chartType = 'bar';
+            const barDatasets = filteredDatasets.map(ds => ({
+                ...ds,
+                type: 'bar',
+                fill: true,
+                yAxisID: 'y'
+            }));
+
+            chart.data.datasets = [...barDatasets, totalLineDataset];
+            $(this).text('切换为折线图');
+            // 🪄 平滑过渡动画
+            chart.update({
+                duration: 1000,
+                easing: 'easeInOutCubic'
+            });
+        }
+        chart.update();
+    });
+});
+</script>
+{% endblock %}
