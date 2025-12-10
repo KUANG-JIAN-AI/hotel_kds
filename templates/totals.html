@@ -119,7 +119,7 @@ $(function () {
                 },
                 title: {
                     display: true,
-                    text: '近30天菜品重量与总量趋势',
+                    text: '直近30日食材重量推移',
                     color: '#f9fafb',
                     font: { size: 18 }
                 },
@@ -171,7 +171,7 @@ $(function () {
             // 把数据集替换为：非零菜品折线 + 总重量折线
             chart.data.datasets = [...nonZeroLineDatasets, totalLineDataset];
             
-            $(this).text('切换为柱形图');
+            $(this).text('棒グラフ切换');
 
             // 🪄 平滑过渡动画
             chart.update({
@@ -189,7 +189,7 @@ $(function () {
             }));
 
             chart.data.datasets = [...barDatasets, totalLineDataset];
-            $(this).text('切换为折线图');
+            $(this).text('折線グラフ切换');
             // 🪄 平滑过渡动画
             chart.update({
                 duration: 1000,
