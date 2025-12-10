@@ -10,6 +10,19 @@
 </div>
 
 <div class="overflow-x-auto">
+    <!-- 🔍 搜索框 -->
+    <div class="flex justify-between items-center mb-4">
+        <!-- <h2 class="text-xl font-semibold text-slate-200">🍱 菜品列表</h2> -->
+        <div class="relative bg-slate-800 p-2 rounded-lg">
+            <input id="search-input" type="text" placeholder="名称検索..."
+                class="pl-10 pr-4 py-2 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-slate-600 shadow-sm transition duration-200"
+                style="background-color: #334155; color: #f1f5f9;">
+            <button onclick="searchFoods()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg">
+                検索
+            </button>
+        </div>
+    </div>
+
     <table id="food-table" class="min-w-full bg-slate-800 rounded-lg shadow-lg">
         <thead>
             <tr>
@@ -67,14 +80,50 @@
             {% endfor %}
         </tbody>
     </table>
+    <div id="pagination-area">
+        <!-- 🌟 分页导航 -->
+        {% if pagination.pages > 1 %}
+        <nav class="flex justify-center items-center mt-6 space-x-2">
+            <!-- 上一页 -->
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('foods', page=pagination.prev_num) }}"
+                class="px-3 py-1 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition">«</a>
+            {% else %}
+            <span class="px-3 py-1 rounded-lg bg-slate-900 text-slate-600 cursor-not-allowed">«</span>
+            {% endif %}
+
+            <!-- 页码 -->
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+            {% if p == pagination.page %}
+            <span class="px-3 py-1 rounded-lg bg-yellow-500 text-white font-semibold shadow">{{ p }}</span>
+            {% else %}
+            <a href="{{ url_for('foods', page=p) }}"
+                class="px-3 py-1 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition">{{ p }}</a>
+            {% endif %}
+            {% else %}
+            <span class="px-2 text-slate-500">…</span>
+            {% endif %}
+            {% endfor %}
+
+            <!-- 下一页 -->
+            {% if pagination.has_next %}
+            <a href="{{ url_for('foods', page=pagination.next_num) }}"
+                class="px-3 py-1 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition">»</a>
+            {% else %}
+            <span class="px-3 py-1 rounded-lg bg-slate-900 text-slate-600 cursor-not-allowed">»</span>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
 
 
 {% block model %}
 <!-- 弹窗 -->
-<div id="modal" class="fixed inset-0 hidden items-center justify-center modal-overlay z-50">
-    <div class="bg-slate-800 p-6 rounded-lg w-96 shadow-lg">
+<div id="modal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-60 z-50">
+    <div class="bg-slate-700/80 backdrop-blur-md p-6 rounded-lg w-96 shadow-lg border border-slate-600/50">
         <h2 class="text-xl font-bold mb-4">添加食品</h2>
         <form id="add-form" class="space-y-4">
             <div>
@@ -194,6 +243,96 @@
 
         // 在顶部插入新数据（如果你希望最新的显示在最上面）
         tableBody.prepend(newRow);
+    }
+
+    let searchTimer = null; // 防抖计时器
+    function searchFoods() {
+        const search_value = document.getElementById('search-input').value;
+        if (search_value.trim() !== "") {
+            document.getElementById('pagination-area').classList.add('hidden');
+        } else {
+            location.href = "/foods";
+        }
+        // 如果上一次的计时器还没执行，就清掉
+        clearTimeout(searchTimer);
+        // 重新启动一个300ms计时器
+        searchTimer = setTimeout(() => {
+            // --------------------------
+            // 发送 AJAX 请求到后端
+            fetch('/search_foods', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ food_name: search_value })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const tbody = document.querySelector('#food-table tbody');
+                        tbody.innerHTML = ''; // 清空旧数据
+
+                        if (data.data.length === 0) {
+                            tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-slate-400 text-center py-3">利用可能なデータはありません</td>
+                    </tr>
+                `;
+                            return;
+                        }
+
+                        // ✅ 循环生成每一行
+                        data.data.forEach(food => {
+                            const row = document.createElement('tr');
+                            row.id = `food-row-${food.id}`;
+                            row.innerHTML = `
+                    <td class="text-slate-100">${food.id}</td>
+                    <td class="text-slate-100">${food.name}</td>
+                    <td class="text-slate-100">${food.category}</td>
+                    <td class="text-slate-100">${food.weight ?? '-'}</td>
+                    <td class="text-slate-100">${food.decay_rate ?? '-'}</td>
+                    <td class="text-slate-100">${food.warning_threshold ?? '-'}</td>
+                    <td class="text-slate-100">${food.critical_threshold ?? '-'}</td>
+                    <td class="text-slate-100">
+                        <span class="${food.status === 1 ? 'status-normal' : 'status-critical'}">
+                            ${food.status_text}
+                        </span>
+                    </td>
+                    <td class="text-slate-100">
+                        ${food.is_today
+                                    ? `
+                                <button id="btn-del-${food.id}"
+                                    class="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                                    onclick="delToday('${food.id}')">取り消し</button>
+                                <button id="btn-add-${food.id}"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded-lg shadow hidden"
+                                    onclick="addToday('${food.id}')">追加</button>
+                                `
+                                    : `
+                                <button id="btn-del-${food.id}"
+                                    class="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 py-1 rounded-lg shadow hidden"
+                                    onclick="delToday('${food.id}')">取り消し</button>
+                                <button id="btn-add-${food.id}"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                                    onclick="addToday('${food.id}')">追加</button>
+                                `
+                                }
+
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                            onclick="editFood('${food.id}')">編集</button>
+                        <button class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
+                            onclick="deleteFood('${food.id}')">删除</button>
+                    </td>
+                `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        error_alert(data.msg);
+                    }
+                })
+                .catch(err => console.error('请求失败', err));
+            // --------------------------
+        }, 300); // 300ms延迟执行
     }
 
     function addToday(id) {

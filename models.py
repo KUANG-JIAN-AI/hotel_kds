@@ -108,6 +108,8 @@ class Foods(db.Model):
             "critical_threshold": self.critical_threshold,
             "status": self.status,
             "status_text": self.status_text(),  # ✅ 新增文字版
+            # ✅ 动态判断 is_today，如果没有设置则默认 False
+            "is_today": getattr(self, "is_today", False),
             "created_at": (
                 self.created_at.strftime("%Y-%m-%d %H:%M:%S")
                 if self.created_at
@@ -190,8 +192,21 @@ class TodayFoods(db.Model):
                 if self.updated_at
                 else None
             ),
-            # ✅ 关键：包含 Foods 表的部分字段
-            "food_info": self.food.to_dict() if self.food else None,
+            # ✅ 仅提取 Foods 的基础信息，避免递归
+            "food_info": (
+                {
+                    "id": self.food.id,
+                    "name": self.food.name,
+                    "category": self.food.category,
+                    "weight": self.food.weight,
+                    "decay_rate": self.food.decay_rate,
+                    "warning_threshold": self.food.warning_threshold,
+                    "critical_threshold": self.food.critical_threshold,
+                    "status": self.food.status,
+                }
+                if self.food
+                else None
+            ),
         }
 
     def __repr__(self):
