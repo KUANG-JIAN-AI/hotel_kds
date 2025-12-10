@@ -7,7 +7,13 @@ from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
 from controllers.chefs import add_chef, login_act
 from controllers.foods import add_food
-from controllers.today_foods import add_today_food, append_food, get_today_foods, stats
+from controllers.today_foods import (
+    add_today_food,
+    append_food,
+    del_today_food,
+    get_today_foods,
+    stats,
+)
 from models import Foods, TodayFoods, db, Chefs
 from utils import login_required
 
@@ -121,7 +127,8 @@ def foods():
 
     # 2️⃣ 查出今天的菜品 id 集合
     today_food_ids = {
-        tf.food_id for tf in TodayFoods.query.filter_by(record_date=today).all()
+        tf.food_id
+        for tf in TodayFoods.query.filter_by(status=1, record_date=today).all()
     }
 
     # 3️⃣ 遍历打标
@@ -140,6 +147,12 @@ def create_food():
 @login_required
 def add_today():
     return add_today_food()
+
+
+@app.route("/del_today", methods=["POST"])
+@login_required
+def del_today():
+    return del_today_food()
 
 
 @app.route("/today_foods", methods=["GET"])
