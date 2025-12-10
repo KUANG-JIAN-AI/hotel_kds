@@ -1,13 +1,17 @@
+import os
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, redirect, render_template, request, session
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import joinedload
+from dotenv import load_dotenv
 from controllers.chefs import add_chef, login_act
 from controllers.foods import add_food
 from controllers.today_foods import add_today_food, append_food, get_today_foods, stats
 from models import Foods, TodayFoods, db, Chefs
 from utils import login_required
+
+load_dotenv()  # ✅ 自动加载 .env 文件中的环境变量
 
 
 app = Flask(__name__)
@@ -16,9 +20,9 @@ app.permanent_session_lifetime = timedelta(hours=6)  # 登录有效期6小时
 
 
 # --- DATABASE ---
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@localhost/hotel_kds"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = "ai_f_group"
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
 # --- 初始化数据库 ---
 db.init_app(app)

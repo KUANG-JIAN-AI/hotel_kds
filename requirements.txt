@@ -3,3 +3,4 @@ flask-sqlalchemy
 pymysql
 tzdata
 apscheduler
+python-dotenv
