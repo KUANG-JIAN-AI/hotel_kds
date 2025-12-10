@@ -15,12 +15,12 @@
             <tr>
                 <th class="text-left text-slate-200">ID</th>
                 <th class="text-left text-slate-200">名称</th>
-                <th class="text-left text-slate-200">类别</th>
-                <th class="text-left text-slate-200">份量</th>
-                <th class="text-left text-slate-200">每秒消耗</th>
-                <th class="text-left text-slate-200">警告阈值</th>
-                <th class="text-left text-slate-200">紧急阈值</th>
-                <th class="text-left text-slate-200">状态</th>
+                <th class="text-left text-slate-200">カテゴリ</th>
+                <th class="text-left text-slate-200">最大量</th>
+                <th class="text-left text-slate-200">消費量(秒)</th>
+                <th class="text-left text-slate-200">注意範囲</th>
+                <th class="text-left text-slate-200">危険範囲</th>
+                <th class="text-left text-slate-200">状態</th>
                 <th class="text-left text-slate-200">操作</th>
             </tr>
         </thead>
@@ -40,21 +40,21 @@
                 <td class="text-slate-100">
                     {% if food.is_today %}
                     <button class="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
-                        onclick="delToday('{{ food.id }}')">下架</button>
+                        onclick="delToday('{{ food.id }}')">取り消し</button>
                     {% else %}
                     <button
                         class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
-                        onclick="addToday('{{ food.id }}')">上架</button>
+                        onclick="addToday('{{ food.id }}')">追加</button>
                     {% endif %}
                     <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
-                        onclick="editFood('{{ food.id }}')">编辑</button>
+                        onclick="editFood('{{ food.id }}')">編集</button>
                     <button class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded-lg shadow"
                         onclick="deleteFood('{{ food.id }}')">删除</button>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="9" class="text-slate-400 text-center">暂无数据</td>
+                <td colspan="9" class="text-slate-400 text-center">利用可能なデータはありません</td>
             </tr>
             {% endfor %}
         </tbody>
