@@ -78,9 +78,9 @@ def decay_today_foods():
 # APScheduler 启动
 # ⏰ 启动定时任务：每 5 秒执行一次
 # -----------------------
-# scheduler = BackgroundScheduler(timezone="Asia/Tokyo")
-# scheduler.add_job(decay_today_foods, "interval", seconds=5, id="decay_task")
-# scheduler.start()
+scheduler = BackgroundScheduler(timezone="Asia/Tokyo")
+scheduler.add_job(decay_today_foods, "interval", seconds=1, id="decay_task")
+scheduler.start()
 
 
 @app.route("/")
@@ -178,25 +178,25 @@ def totals():
     return render_template("/totals.html", data=data, foods=food_names)
 
 
-# @app.route("/toggle_decay", methods=["POST"])
-# def toggle_decay():
-#     """前端点击按钮时调用，暂停或恢复衰减任务"""
+@app.route("/toggle_decay", methods=["POST"])
+def toggle_decay():
+    """前端点击按钮时调用，暂停或恢复衰减任务"""
 
-#     print("当前任务：", scheduler.get_jobs())
-#     global is_decay_enabled
+    print("当前任务：", scheduler.get_jobs())
+    global is_decay_enabled
 
-#     job = scheduler.get_job("decay_task")
-#     if job.next_run_time:  # 正在运行中 → 暂停
-#         scheduler.pause_job("decay_task")
-#         is_decay_enabled = False  # 🧩 同步关闭任务执行
-#         status = "paused"
-#     else:
-#         scheduler.resume_job("decay_task")
-#         is_decay_enabled = True  # 🧩 同步开启任务执行
-#         status = "running"
+    job = scheduler.get_job("decay_task")
+    if job.next_run_time:  # 正在运行中 → 暂停
+        scheduler.pause_job("decay_task")
+        is_decay_enabled = False  # 🧩 同步关闭任务执行
+        status = "paused"
+    else:
+        scheduler.resume_job("decay_task")
+        is_decay_enabled = True  # 🧩 同步开启任务执行
+        status = "running"
 
-#     print(f"当前衰减状态: {status}, 启动标志: {is_decay_enabled}")
-#     return jsonify({"code": 200, "msg": "success", "status": status})
+    print(f"当前衰减状态: {status}, 启动标志: {is_decay_enabled}")
+    return jsonify({"code": 200, "msg": "success", "status": status})
 
 
 if __name__ == "__main__":

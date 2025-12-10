@@ -131,7 +131,7 @@
     function startAutoRefresh() {
         // 避免重复定时器
         if (refreshTimer) clearInterval(refreshTimer);
-        refreshTimer = setInterval(loadDishes, 5000);
+        refreshTimer = setInterval(loadDishes, 1000);
         console.log("✅ 前端刷新启动");
     }
 
