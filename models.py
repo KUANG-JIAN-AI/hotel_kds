@@ -94,6 +94,10 @@ class Foods(db.Model):
     )
     deleted_at = db.Column(db.DateTime, nullable=True)
 
+    @staticmethod
+    def active():
+        return Foods.query.filter(Foods.deleted_at.is_(None))
+
     def status_text(self):
         """返回状态对应的文字"""
         mapping = {

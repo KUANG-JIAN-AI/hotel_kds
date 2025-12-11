@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
 from controllers.chefs import add_chef, delete_chef, login_act, update_chef
-from controllers.foods import add_food
+from controllers.foods import add_food, delete_food
 from controllers.today_foods import (
     add_today_food,
     append_food,
@@ -178,7 +178,7 @@ def foods():
         keyword = request.args.get("keyword", "").strip()
 
     # 构建查询
-    query = Foods.query
+    query = Foods.active()
     if keyword:
         query = query.filter(Foods.name.like(f"%{keyword}%"))
 
@@ -214,6 +214,11 @@ def foods():
 @login_required
 def create_food():
     return add_food()
+
+@app.route("/del_food", methods=["POST"])
+@login_required
+def del_food():
+    return delete_food()
 
 
 @app.route("/add_today", methods=["POST"])

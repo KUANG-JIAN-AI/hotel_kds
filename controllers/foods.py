@@ -1,7 +1,9 @@
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from flask import jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import Foods, db
+from models import Foods, TodayFoods, db
 
 
 def add_food():
@@ -48,3 +50,28 @@ def add_food():
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500
+
+
+def delete_food():
+    data = request.get_json()
+
+    food_id = data.get("food_id", 0)
+    if not food_id:
+        return jsonify({"code": 401, "msg": "菜品ID不存在"}), 401
+
+    food = Foods.query.get(food_id)
+    if not food:
+        return jsonify({"code": 404, "msg": "菜品不存在"}), 404
+
+    food.deleted_at = datetime.now(ZoneInfo("Asia/Tokyo"))
+
+    today_food = TodayFoods.query.filter_by(
+        food_id=food_id, record_date=date.today()
+    ).first()
+
+    if today_food:
+        today_food.status = 2
+
+    db.session.commit()
+
+    return jsonify({"code": 200, "msg": "删除成功"}), 200
