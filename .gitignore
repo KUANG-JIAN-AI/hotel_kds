@@ -1,3 +1,96 @@
-__pycache__
-.venv
+# ==============================
+# 🐍 Python / Flask 通用忽略规则
+# ==============================
+
+# 编译缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# 包管理
+pip-log.txt
+pip-delete-this-directory.txt
+
+# VSCode / PyCharm 等编辑器配置
+.vscode/
+.idea/
+
+# 单元测试 / 覆盖率报告
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# 生成的文档 / 构建文件
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# 临时文件 / 备份文件
+*.log
+*.pot
+*.mo
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# Flask 运行时
+instance/
+*.db
+*.sqlite3
+
+# 环境变量文件（敏感信息）
 .env
+*.env
+
+# ==============================
+# 🔐 项目自定义配置
+# ==============================
+
+# 数据库配置文件
+config.json
+config.yaml
+config.yml
+
+# 上传或缓存的静态文件
+uploads/
+media/
+static/uploads/
+temp/
+
+# ==============================
+# ☁️ 部署相关（可选）
+# ==============================
+
+# Docker
+*.pid
+*.seed
+*.cover
+docker-compose.override.yml
+
+# 其他系统或部署缓存
+*.log
+*.out
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================
+# ✅ 安全提示
+# ==============================
+# 如果有生产环境配置（例如 config_prod.py 或 .env.prod），
+# 请务必加到 .gitignore，防止敏感信息被上传。
