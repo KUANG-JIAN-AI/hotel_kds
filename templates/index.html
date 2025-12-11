@@ -15,8 +15,6 @@
 </header>
 
 <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-
-<div id="notifications" class="fixed bottom-6 right-6 space-y-2"></div>
 {% endblock %}
 
 {% block js %}
@@ -101,11 +99,7 @@
     //     $("#warning-count").text(`${ICON.clock} ${warningCount}`);
     // }
 
-    function addNotification(msg) {
-        const $note = $(`<div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-lg shadow">${msg}</div>`);
-        $("#notifications").prepend($note);
-        setTimeout(() => $note.remove(), 3000);
-    }
+
 
     // function decayDishes() {
     //     dishes = dishes.map(d => {

@@ -50,6 +50,7 @@
             <!-- 主体内容 -->
             <main class="flex-1 p-6 mt-16">
                 {% block content %}{% endblock %}
+                <div id="notifications" class="fixed bottom-6 right-6 space-y-2"></div>
             </main>
         </div>
     </div>
@@ -147,6 +148,12 @@
                 }
             });
         });
+
+        function addNotification(msg) {
+            const $note = $(`<div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-lg shadow">${msg}</div>`);
+            $("#notifications").prepend($note);
+            setTimeout(() => $note.remove(), 3000);
+        }
     </script>
 </body>
 

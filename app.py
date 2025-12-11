@@ -117,6 +117,39 @@ def create_chef():
     return add_chef()
 
 
+@app.route("/chef/<int:id>", methods=["GET"])
+@login_required
+def get_chef(id):
+    chef = Chefs.query.get(id)
+    if not chef:
+        return jsonify({"code": 404, "msg": "管理人が存在しません"}), 404
+
+    return jsonify({"code": 200, "msg": "success", "data": chef.to_dict()}), 200
+
+
+@app.route("/chef/<int:id>", methods=["PUT"])
+@login_required
+def put_chef(id):
+    data = request.get_json()
+    chef = Chefs.query.get(id)
+
+    if not chef:
+        return jsonify({"code": 404, "msg": "管理人が存在しません"}), 404
+
+    # 更新字段
+    chef.nickname = data.get("nickname", chef.nickname)
+    chef.status = int(data.get("status", chef.status))
+    chef.advice = data.get("advice", chef.advice)
+
+    # 如果传入了新密码，就更新
+    password = data.get("password", "").strip()
+    if password:
+        chef.set_password(password)
+
+    db.session.commit()
+    return jsonify({"code": 200, "msg": "管理人情報を更新しました"}), 200
+
+
 @app.route("/set_chef", methods=["POST"])
 @login_required
 def set_chef():

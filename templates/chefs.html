@@ -85,6 +85,43 @@
         </form>
     </div>
 </div>
+
+<!-- 弹窗 -->
+<div id="edit-modal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-60 z-50">
+    <div class="bg-slate-700/80 backdrop-blur-md p-6 rounded-lg w-96 shadow-lg border border-slate-600/50">
+        <h2 class="text-xl font-bold mb-4">管理人を編集</h2>
+        <form id="edit-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-200 mb-1">アカウント</label>
+                <input type="text" id="edit-username" class="modal-input cursor-not-allowed"
+                    placeholder="アカウント名を入力してください" disabled>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">パスワード</label>
+                <input type="password" id="edit-password" class="modal-input" placeholder="パスワードを入力してください">
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">名前</label>
+                <input type="text" id="edit-nickname" class="modal-input" placeholder="名前を入力してください">
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">状態</label>
+                <select id="edit-status" class="modal-select">
+                    <option value="1" selected>正常</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">補足</label>
+                <input type="text" id="edit-advice" class="modal-input" placeholder="補足を入力してください">
+            </div>
+            <div class="flex justify-end gap-2">
+                <input type="hidden" id="edit-id" class="modal-input">
+                <button type="button" id="cancel-edit" class="modal-btn modal-btn-cancel">取消</button>
+                <button type="submit" class="modal-btn modal-btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block js %}
@@ -94,6 +131,16 @@
     const cancelBtn = document.getElementById('cancel-btn');
     const addForm = document.getElementById('add-form');
     const tableBody = document.querySelector('#chef-table tbody');
+
+    // 编辑组
+    const editModal = document.getElementById('edit-modal');
+    const cancelEdit = document.getElementById('cancel-edit');
+    const editForm = document.getElementById('edit-form');
+
+    cancelEdit.addEventListener('click', () => {
+        editModal.classList.add('hidden');
+        editModal.classList.remove('flex');
+    });
 
     addBtn.addEventListener('click', () => {
         modal.classList.remove('hidden');
@@ -140,6 +187,40 @@
         // --------------------------
     });
 
+    editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const chef_id = document.getElementById('edit-id').value;
+        const password = document.getElementById('edit-password').value;
+        const nickname = document.getElementById('edit-nickname').value;
+        const status = document.getElementById('edit-status').value;
+        const advice = document.getElementById('edit-advice').value;
+
+        // --------------------------
+        // 发送 AJAX 请求到后端
+        fetch('/chef/' + chef_id, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password, nickname: nickname, status: status, advice: advice })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    // 隐藏表单
+                    editModal.classList.add('hidden');
+                    editModal.classList.remove('flex');
+                    editForm.reset();
+                    addNotification("✅ " + data.msg);
+                    location.reload();
+                } else {
+                    error_alert(data.msg);
+                }
+            })
+            .catch(err => console.error('请求失败', err));
+        // --------------------------
+    });
+
     // ✅ 动态添加一行到表格
     function appendChefRow(chef) {
         const newRow = document.createElement("tr");
@@ -161,7 +242,21 @@
     }
 
     function editChef(id) {
-        alert(id);
+        editModal.classList.remove('hidden');
+        editModal.classList.add('flex');
+        // 从后端获取这位管理人的数据
+        fetch(`/chef/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                // 填充表单
+                document.getElementById("edit-id").value = data.data.id;
+                document.getElementById("edit-username").value = data.data.username;
+                document.getElementById("edit-password").value = ""; // 密码不预填
+                document.getElementById("edit-nickname").value = data.data.nickname;
+                document.getElementById("edit-status").value = data.data.status;
+                document.getElementById("edit-advice").value = data.data.advice || "";
+            })
+            .catch(err => console.error("加载编辑数据失败:", err));
     }
 
     function deleteChef(id) {
