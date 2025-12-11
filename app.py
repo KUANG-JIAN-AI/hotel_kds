@@ -117,7 +117,7 @@ def create_chef():
     return add_chef()
 
 
-@app.route("/foods", methods=["GET"])
+@app.route("/foods", methods=["GET", "POST"])
 @login_required
 def foods():
     today = date.today()
@@ -126,8 +126,19 @@ def foods():
     page = request.args.get("page", 1, type=int)
     per_page = 10  # 每页显示条数
 
+    # 如果是 POST 搜索
+    if request.method == "POST":
+        keyword = request.form.get("keyword", "").strip()
+    else:
+        keyword = request.args.get("keyword", "").strip()
+
+    # 构建查询
+    query = Foods.query
+    if keyword:
+        query = query.filter(Foods.name.like(f"%{keyword}%"))
+
     # 分页查询
-    pagination = Foods.query.order_by(Foods.id.desc()).paginate(
+    pagination = query.order_by(Foods.id.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     foods = pagination.items
@@ -146,44 +157,11 @@ def foods():
         food.is_today = food.id in today_food_ids
 
     return render_template(
-        "foods.html", foods=foods, pagination=pagination, request=request
-    )
-
-
-@app.route("/search_foods", methods=["POST"])
-@login_required
-def search_foods():
-    data = request.get_json(silent=True) or {}
-    food_name = data.get("food_name", "").strip()
-    today = date.today()
-
-    # 1️⃣ 查出所有菜品
-    foods = (
-        Foods.query.filter(Foods.name.like(f"%{food_name}%"))
-        .order_by(Foods.id.desc())
-        .all()
-    )
-
-    # 2️⃣ 查出今天的菜品 id 集合
-    today_food_ids = {
-        tf.food_id
-        for tf in TodayFoods.query.filter_by(status=1, record_date=today).all()
-    }
-
-    # 3️⃣ 遍历打标
-    for food in foods:
-        food.is_today = food.id in today_food_ids
-
-    return (
-        jsonify(
-            {
-                "code": 200,
-                "msg": "success",
-                "count": len(foods),
-                "data": [f.to_dict() for f in foods],
-            }
-        ),
-        200,
+        "foods.html",
+        foods=foods,
+        pagination=pagination,
+        request=request,
+        keyword=keyword,  # ✅ 传到模板
     )
 
 
