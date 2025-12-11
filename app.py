@@ -215,6 +215,39 @@ def foods():
 def create_food():
     return add_food()
 
+
+@app.route("/food/<int:id>", methods=["GET"])
+@login_required
+def get_food(id):
+    food = Foods.query.get(id)
+    if not food:
+        return jsonify({"code": 404, "msg": "食品が存在しません"}), 404
+
+    return jsonify({"code": 200, "msg": "success", "data": food.to_dict()}), 200
+
+
+@app.route("/food/<int:id>", methods=["PUT"])
+@login_required
+def put_food(id):
+    data = request.get_json()
+    food = Foods.query.get(id)
+
+    if not food:
+        return jsonify({"code": 404, "msg": "食品が存在しません"}), 404
+
+    # 更新字段
+    food.name = data.get("name", food.name)
+    food.category = data.get("category", food.category)
+    food.weight = data.get("weight", food.weight)
+    food.decay_rate = data.get("decay_rate", food.decay_rate)
+    food.warning_threshold = data.get("warning_threshold", food.warning_threshold)
+    food.critical_threshold = data.get("critical_threshold", food.critical_threshold)
+    food.status = data.get("status", food.status)
+
+    db.session.commit()
+    return jsonify({"code": 200, "msg": "食品を更新しました"}), 200
+
+
 @app.route("/del_food", methods=["POST"])
 @login_required
 def del_food():

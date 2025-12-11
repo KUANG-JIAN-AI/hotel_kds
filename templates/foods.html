@@ -166,6 +166,50 @@
         </form>
     </div>
 </div>
+
+<!-- 编辑弹窗 -->
+<div id="edit-modal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-60 z-50">
+    <div class="bg-slate-700/80 backdrop-blur-md p-6 rounded-lg w-96 shadow-lg border border-slate-600/50">
+        <h2 class="text-xl font-bold mb-4">編集食品</h2>
+        <form id="edit-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-200 mb-1">名称</label>
+                <input type="text" id="edit-name" class="modal-input" placeholder="请输入名称" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">类别</label>
+                <input type="text" id="edit-category" class="modal-input" placeholder="请输入类别" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">份量</label>
+                <input type="number" id="edit-weight" class="modal-input" placeholder="请输入份量" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">每秒消耗</label>
+                <input type="number" id="edit-decay_rate" class="modal-input" placeholder="请输入每秒消耗" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">警告阈值</label>
+                <input type="number" id="edit-warning_threshold" class="modal-input" placeholder="请输入警告阈值" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">紧急阈值</label>
+                <input type="number" id="edit-critical_threshold" class="modal-input" placeholder="请输入紧急阈值" required>
+            </div>
+            <div>
+                <label class="block text-slate-200 mb-1">状态</label>
+                <select id="edit-status" class="modal-select" required>
+                    <option value="1" selected>正常</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2">
+                <input type="hidden" id="edit-id" class="modal-input">
+                <button type="button" id="cancel-edit" class="modal-btn modal-btn-cancel">取消</button>
+                <button type="submit" class="modal-btn modal-btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block js %}
@@ -175,6 +219,16 @@
     const cancelBtn = document.getElementById('cancel-btn');
     const addForm = document.getElementById('add-form');
     const tableBody = document.querySelector('#food-table tbody');
+
+    // 编辑组
+    const editModal = document.getElementById('edit-modal');
+    const cancelEdit = document.getElementById('cancel-edit');
+    const editForm = document.getElementById('edit-form');
+
+    cancelEdit.addEventListener('click', () => {
+        editModal.classList.add('hidden');
+        editModal.classList.remove('flex');
+    });
 
     addBtn.addEventListener('click', () => {
         modal.classList.remove('hidden');
@@ -215,6 +269,43 @@
 
                     success_alert(data.msg);
                     appendfoodRow(data.data);  // ✅ 动态插入到表格
+                } else {
+                    error_alert(data.msg);
+                }
+            })
+            .catch(err => console.error('请求失败', err));
+        // --------------------------
+    });
+
+    editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const food_id = document.getElementById('edit-id').value;
+        const name = document.getElementById('edit-name').value;
+        const category = document.getElementById('edit-category').value;
+        const weight = document.getElementById('edit-weight').value;
+        const decay_rate = document.getElementById('edit-decay_rate').value;
+        const warning_threshold = document.getElementById('edit-warning_threshold').value;
+        const critical_threshold = document.getElementById('edit-critical_threshold').value;
+        const status = document.getElementById('edit-status').value;
+
+        // --------------------------
+        // 发送 AJAX 请求到后端
+        fetch('/food/' + food_id, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: name, category: category, weight: weight, decay_rate: decay_rate, warning_threshold: warning_threshold, critical_threshold: critical_threshold, status: status })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    // 隐藏表单
+                    editModal.classList.add('hidden');
+                    editModal.classList.remove('flex');
+                    editForm.reset();
+                    addNotification("✅ " + data.msg);
+                    location.reload();
                 } else {
                     error_alert(data.msg);
                 }
@@ -313,7 +404,23 @@
     }
 
     function editFood(id) {
-        alert(id);
+        editModal.classList.remove('hidden');
+        editModal.classList.add('flex');
+        // 从后端获取这位管理人的数据
+        fetch(`/food/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                // 填充表单
+                document.getElementById("edit-id").value = data.data.id;
+                document.getElementById("edit-name").value = data.data.name;
+                document.getElementById("edit-category").value = data.data.category;
+                document.getElementById("edit-weight").value = data.data.weight;
+                document.getElementById("edit-decay_rate").value = data.data.decay_rate;
+                document.getElementById("edit-warning_threshold").value = data.data.warning_threshold;
+                document.getElementById("edit-critical_threshold").value = data.data.critical_threshold;
+                document.getElementById("edit-status").value = data.data.status;
+            })
+            .catch(err => console.error("加载编辑数据失败:", err));
     }
 
     function deleteFood(id) {
