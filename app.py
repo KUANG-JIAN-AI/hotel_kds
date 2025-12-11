@@ -5,7 +5,7 @@ from flask import Flask, jsonify, redirect, render_template, request, session
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
-from controllers.chefs import add_chef, login_act
+from controllers.chefs import add_chef, login_act, update_chef
 from controllers.foods import add_food
 from controllers.today_foods import (
     add_today_food,
@@ -115,6 +115,11 @@ def chefs():
 @login_required
 def create_chef():
     return add_chef()
+
+@app.route("/set_chef", methods=["POST"])
+@login_required
+def set_chef():
+    return update_chef()
 
 
 @app.route("/foods", methods=["GET", "POST"])

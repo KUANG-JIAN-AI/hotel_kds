@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='chart.js') }}"></script>
 <script>
 $(function () {
     const chartData = {{ data|default({})|tojson }};
