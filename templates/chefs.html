@@ -165,7 +165,40 @@
     }
 
     function deleteChef(id) {
-        alert(id);
+        Swal.fire({
+            title: "确定删除吗？",
+            text: "删除后用户将无法登录",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // --------------------------
+                // 发送 AJAX 请求到后端
+                fetch('/del_chef', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ chef_id: id })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else if (data.code === 200) {
+                            success_alert(data.msg);
+                        } else {
+                            error_alert(data.msg);
+                        }
+                    })
+                    .catch(err => console.error('请求失败', err));
+                // --------------------------
+            }
+        });
     }
 </script>
 {% endblock %}

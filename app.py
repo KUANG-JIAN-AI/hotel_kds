@@ -5,7 +5,7 @@ from flask import Flask, jsonify, redirect, render_template, request, session
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
-from controllers.chefs import add_chef, login_act, update_chef
+from controllers.chefs import add_chef, delete_chef, login_act, update_chef
 from controllers.foods import add_food
 from controllers.today_foods import (
     add_today_food,
@@ -107,7 +107,7 @@ def form():
 @app.route("/chefs", methods=["GET"])
 @login_required
 def chefs():
-    chefs = Chefs.query.order_by(Chefs.id.desc()).all()
+    chefs = Chefs.active().order_by(Chefs.id.desc()).all()
     return render_template("chefs.html", chefs=chefs, request=request)
 
 
@@ -116,10 +116,17 @@ def chefs():
 def create_chef():
     return add_chef()
 
+
 @app.route("/set_chef", methods=["POST"])
 @login_required
 def set_chef():
     return update_chef()
+
+
+@app.route("/del_chef", methods=["POST"])
+@login_required
+def del_chef():
+    return delete_chef()
 
 
 @app.route("/foods", methods=["GET", "POST"])

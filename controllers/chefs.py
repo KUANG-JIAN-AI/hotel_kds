@@ -1,3 +1,5 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from flask import jsonify, request, session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -13,7 +15,7 @@ def login_act():
     if not username or not password:
         return jsonify({"code": 400, "msg": "用户名和密码不能为空"}), 400
 
-    chef = Chefs.query.filter_by(username=username).first()
+    chef = Chefs.active().filter_by(username=username).first()
 
     # 统一模糊错误信息，避免账号枚举
     if not chef or not chef.check_password(password):
@@ -104,3 +106,33 @@ def update_chef():
     # 🚫 情况 3：输入不完整
     else:
         return jsonify({"code": 400, "msg": "请输入完整的信息"}), 400
+
+
+def delete_chef():
+    data = request.get_json()
+
+    chef_id = data.get("chef_id", 0)
+    if not chef_id:
+        return jsonify({"code": 401, "msg": "用户ID不存在"}), 401
+
+    chef = Chefs.query.get(chef_id)
+    if not chef:
+        return jsonify({"code": 404, "msg": "用户不存在"}), 404
+
+    chef.deleted_at = datetime.now(ZoneInfo("Asia/Tokyo"))
+    db.session.commit()
+
+    chef_id = int(data.get("chef_id", 0))
+    session_user_id = int(session.get("user_id") or 0)
+
+    if session_user_id == chef_id:
+        # 清除 session 并要求重新登录
+        session.clear()
+        return (
+            jsonify(
+                {"code": 200, "msg": "密码已更新，请重新登录", "redirect": "/login"}
+            ),
+            200,
+        )
+
+    return jsonify({"code": 200, "msg": "success"}), 200

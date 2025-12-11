@@ -28,6 +28,10 @@ class Chefs(db.Model):
     )
     deleted_at = db.Column(db.DateTime, nullable=True)
 
+    @staticmethod
+    def active():
+        return Chefs.query.filter(Chefs.deleted_at.is_(None))
+
     def set_password(self, password: str):
         self.password = generate_password_hash(password)
 
