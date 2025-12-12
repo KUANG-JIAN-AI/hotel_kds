@@ -15,7 +15,7 @@ from controllers.today_foods import (
     stats,
 )
 from models import Foods, TodayFoods, db, Chefs
-from utils import login_required
+from utils import load_status, login_required, save_status
 
 load_dotenv()  # ✅ 自动加载 .env 文件中的环境变量
 
@@ -33,7 +33,9 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 # --- 初始化数据库 ---
 db.init_app(app)
 
-is_decay_enabled = True
+
+# 初始化时读取状态
+is_decay_enabled = load_status()
 
 
 # -----------------------
@@ -323,6 +325,7 @@ def toggle_decay():
         is_decay_enabled = True  # 🧩 同步开启任务执行
         status = "running"
 
+    save_status(is_decay_enabled)  # ✅ 每次更新时写入文件
     print(f"当前衰减状态: {status}, 启动标志: {is_decay_enabled}")
     return jsonify({"code": 200, "msg": "success", "status": status})
 

@@ -4,6 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from models import Foods, TodayFoods, db
+from utils import load_status
 
 
 def get_today_foods():
@@ -23,6 +24,9 @@ def get_today_foods():
     critical = sum(1 for f in data if f["remain"] == 2)
     empty = sum(1 for f in data if f["remain"] == 3)
 
+    # ✅ 定时任务状态（True = 运行中, False = 暂停中）
+    decay_status = "running" if load_status() else "paused"
+
     return (
         jsonify(
             {
@@ -35,6 +39,7 @@ def get_today_foods():
                     "critical": critical,
                     "empty": empty,
                 },
+                "decay_status": decay_status,  # 👈 新增字段
             }
         ),
         200,

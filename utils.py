@@ -1,5 +1,8 @@
 from functools import wraps
+import json, os
 from flask import session, redirect, url_for, request, jsonify
+
+STATUS_FILE = "task_status.json"
 
 
 def login_required(f):
@@ -18,3 +21,17 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def save_status(enabled: bool):
+    """保存状态到 JSON 文件"""
+    with open(STATUS_FILE, "w") as f:
+        json.dump({"is_decay_enabled": enabled}, f)
+
+
+def load_status() -> bool:
+    """读取状态，没有文件则默认 True"""
+    if not os.path.exists(STATUS_FILE):
+        return True
+    with open(STATUS_FILE, "r") as f:
+        return json.load(f).get("is_decay_enabled", True)

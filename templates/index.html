@@ -32,95 +32,8 @@
         load: "🔄"
     };
 
-    // const INITIAL_DISHES = [
-    //     { id: 1, name: 'オーストラリア産ロブスター', weight: 100, status: 'normal', decayRate: 0.8 },
-    //     { id: 2, name: 'ブラックペッパービーフ', weight: 85, status: 'normal', decayRate: 1.2 },
-    //     { id: 3, name: 'フォアグラ', weight: 45, status: 'warning', decayRate: 1.5 },
-    //     { id: 4, name: '海鮮チャーハン', weight: 90, status: 'normal', decayRate: 0.5 },
-    //     { id: 5, name: 'ティラミス', weight: 20, status: 'critical', decayRate: 0.9 },
-    //     { id: 6, name: 'ボルシチ', weight: 60, status: 'normal', decayRate: 1.0 },
-    //     { id: 7, name: 'シーザーサラダ', weight: 15, status: 'critical', decayRate: 0.7 },
-    //     { id: 8, name: 'ラムチョップ', weight: 75, status: 'normal', decayRate: 1.1 },
-    // ];
-
-    // const WARNING_THRESHOLD = 40;
-    // const CRITICAL_THRESHOLD = 20;
-
-    // let dishes = [...INITIAL_DISHES];
     let refreshTimer = null; // 定时器句柄
     let isRunning = true;    // 前端运行状态
-    // let intervalId = null;
-
-    // function renderDishes() {
-    //     const $grid = $("#dishes-grid");
-    //     $grid.empty();
-
-    //     dishes.forEach(dish => {
-    //         let cardClass = "card-bg";
-    //         let progressClass = "progress-normal";
-    //         let statusText = "十分";
-    //         let statusIcon = ICON.check;
-
-    //         if (dish.status === "warning") {
-    //             cardClass = "warning-bg";
-    //             progressClass = "progress-warning";
-    //             statusText = "補充推奨";
-    //             statusIcon = ICON.clock;
-    //         } else if (dish.status === "critical") {
-    //             cardClass = "critical-bg";
-    //             progressClass = "progress-critical";
-    //             statusText = "至急補充";
-    //             statusIcon = ICON.alert;
-    //         } else if (dish.status === "empty") {
-    //             cardClass = "empty-bg";
-    //             progressClass = "progress-empty";
-    //             statusText = "売り切れ";
-    //             statusIcon = ICON.alert;
-    //         }
-
-    //         const $dish = $(`
-    //       <div class="p-5 rounded-lg border-2 ${cardClass}">
-    //         <h3 class="text-lg font-bold mb-2">${dish.name}</h3>
-    //         <div class="h-3 w-full bg-slate-700 rounded-full overflow-hidden mb-3">
-    //           <div class="${progressClass} h-full transition-all duration-500" style="width:${Math.round(dish.weight)}%"></div>
-    //         </div>
-    //         <div class="flex justify-between items-center">
-    //           <div class="text-sm">${statusIcon} ${statusText}</div>
-    //           <button class="bg-slate-700 px-3 py-1 rounded-lg hover:bg-blue-600 refill-btn" data-id="${dish.id}">${ICON.refresh}</button>
-    //         </div>
-    //       </div>
-    //     `);
-    //         $grid.append($dish);
-    //     });
-
-    //     const criticalCount = dishes.filter(d => d.status === "critical" || d.status === "empty").length;
-    //     const warningCount = dishes.filter(d => d.status === "warning").length;
-    //     $("#critical-count").text(`${ICON.alert} ${criticalCount}`);
-    //     $("#warning-count").text(`${ICON.clock} ${warningCount}`);
-    // }
-
-
-
-    // function decayDishes() {
-    //     dishes = dishes.map(d => {
-    //         if (d.weight <= 0) return { ...d, weight: 0, status: "empty" };
-    //         const change = Math.random() * d.decayRate;
-    //         const newWeight = Math.max(0, d.weight - change);
-    //         let status = "normal";
-    //         if (newWeight <= 0) status = "empty";
-    //         else if (newWeight <= CRITICAL_THRESHOLD) status = "critical";
-    //         else if (newWeight <= WARNING_THRESHOLD) status = "warning";
-    //         return { ...d, weight: newWeight, status };
-    //     });
-    //     renderDishes();
-    // }
-
-    // function startInterval() {
-    //     if (intervalId) clearInterval(intervalId);
-    //     if (isRunning) {
-    //         intervalId = setInterval(decayDishes, 1000);
-    //     }
-    // }
 
     function startAutoRefresh() {
         // 避免重复定时器
@@ -212,6 +125,16 @@
                     $("#warning-count").text(`${ICON.clock} ${data.stats.warning || 0}`);
                     $("#critical-count").text(`${ICON.alert} ${data.stats.critical || 0}`);
                     $("#empty-count").text(`${ICON.close} ${data.stats.empty || 0}`);
+
+                    if (data.decay_status == "paused") {
+                        $("#toggle-btn").text("▶️ 再開");
+                        stopAutoRefresh();  // ✅ 停止前端刷新
+                        isRunning = false;
+                    } else {
+                        $("#toggle-btn").text("⏸️ 一時停止");
+                        startAutoRefresh(); // ✅ 恢复前端刷新
+                        isRunning = true;
+                    }
 
                     const $grid = $("#dishes-grid");
                     $grid.empty();
