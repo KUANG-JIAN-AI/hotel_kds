@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from flask import jsonify, request
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
@@ -185,3 +185,42 @@ def stats():
 
     food_names = sorted({r.name for r in results})
     return data, food_names
+
+
+def get_days():
+    # 获取当前页码（默认第1页）
+    page = request.args.get("page", 1, type=int)
+    per_page = 10  # 每页显示条数
+
+    # 如果是 POST 搜索
+    if request.method == "POST":
+        keyword = request.form.get("keyword", "").strip()
+    else:
+        keyword = request.args.get("keyword", "").strip()
+
+    date_str = (
+        request.form.get("date", "").strip()
+        if request.method == "POST"
+        else request.args.get("date", "").strip()
+    )
+    query = TodayFoods.active().join(TodayFoods.food)
+
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            query = query.filter(TodayFoods.record_date == target_date)
+        except ValueError:
+            pass  # 忽略无效日期格式
+
+    # 构建查询
+    if keyword:
+        query = query.filter(Foods.name.like(f"%{keyword}%"))
+
+    # 分页查询
+    pagination = (
+        query.order_by(TodayFoods.id.desc())
+        .options(joinedload(TodayFoods.food))  # ✅ 一次性加载 Foods
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )  # ✅ 一次性加载 Foods
+    foods = pagination.items
+    return foods, pagination, request, keyword, date_str

@@ -173,6 +173,10 @@ tbody tr:hover {
     background-color: rgba(15, 23, 42, 0.8);
 }
 
+.modal-bg {
+    background-color: #334155;
+}
+
 /* 输入框、选择框样式 */
 .modal-input {
     width: 100%;

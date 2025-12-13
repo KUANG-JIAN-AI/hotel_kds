@@ -11,6 +11,7 @@ from controllers.today_foods import (
     add_today_food,
     append_food,
     del_today_food,
+    get_days,
     get_today_foods,
     stats,
 )
@@ -272,6 +273,20 @@ def del_today():
 @login_required
 def today_foods():
     return get_today_foods()
+
+
+@app.route("/days", methods=["GET", "POST"])
+@login_required
+def days():
+    foods, pagination, request, keyword, date = get_days()
+    return render_template(
+        "/days.html",
+        foods=foods,
+        pagination=pagination,
+        request=request,
+        keyword=keyword,  # ✅ 传到模板
+        date=date,
+    )
 
 
 @app.route("/append_today_food", methods=["POST"])

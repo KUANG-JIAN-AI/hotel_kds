@@ -156,6 +156,10 @@ class TodayFoods(db.Model):
     )
     deleted_at = db.Column(db.DateTime, nullable=True)
 
+    @staticmethod
+    def active():
+        return TodayFoods.query.filter(TodayFoods.deleted_at.is_(None))
+
     # 建立关联
     food = db.relationship("Foods", backref="today_foods")
 
