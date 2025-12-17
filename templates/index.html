@@ -4,7 +4,7 @@
 <header class="flex justify-between items-center p-4 rounded-xl border shadow-lg mb-6">
     <div class="flex items-center gap-3">
         <!-- <div class="bg-blue-600 p-2 rounded-lg">👨‍🍳</div> -->
-        <h1 class="text-2xl font-bold">🍽️ 今日の食事</h1>
+        <h1 class="text-2xl font-bold">🍽️ 本日の料理</h1>
     </div>
     <div class="flex items-center gap-3">
         <div id="warning-count" class="px-3 py-2 rounded-lg bg-yellow-900/30 text-yellow-400">⏰ 0</div>
@@ -32,21 +32,21 @@
         load: "🔄"
     };
 
-    let refreshTimer = null; // 定时器句柄
-    let isRunning = true;    // 前端运行状态
+    let refreshTimer = null; // タイマーのハンドル
+    let isRunning = true;    // フロントエンドの稼働状態
 
     function startAutoRefresh() {
-        // 避免重复定时器
+        // タイマーの重複を防止
         if (refreshTimer) clearInterval(refreshTimer);
         refreshTimer = setInterval(loadDishes, 1000);
-        console.log("✅ 前端刷新启动");
+        console.log("✅ フロントエンドの更新を開始");
     }
 
     function stopAutoRefresh() {
         if (refreshTimer) {
             clearInterval(refreshTimer);
             refreshTimer = null;
-            console.log("⏸ 前端刷新停止");
+            console.log("⏸ フロントエンドの更新を停止");
         }
     }
 
@@ -57,7 +57,7 @@
         $("#toggle-btn").click(function () {
             isRunning = !isRunning;
             // --------------------------
-            // 发送 AJAX 请求到后端
+            // バックエンドへ AJAX リクエストを送信
             fetch('/toggle_decay', {
                 method: 'POST',
                 headers: {
@@ -70,18 +70,18 @@
                     if (data.code === 200) {
                         if (data.status === "paused") {
                             $(this).text("▶️ 再開");
-                            stopAutoRefresh();  // ✅ 停止前端刷新
+                            stopAutoRefresh();  // ✅ フロントエンドの更新を停止
                             isRunning = false;
                         } else {
                             $(this).text("⏸️ 一時停止");
-                            startAutoRefresh(); // ✅ 恢复前端刷新
+                            startAutoRefresh(); // ✅ フロントエンドの更新を再開
                             isRunning = true;
                         }
                     } else {
                         error_alert(data.msg);
                     }
                 })
-                .catch(err => console.error('请求失败', err));
+                .catch(err => console.error('リクエストに失敗しました', err));
             // --------------------------
 
         });
@@ -89,7 +89,7 @@
         $(document).on("click", ".refill-btn", function () {
             const id = parseInt($(this).data("id"));
             // --------------------------
-            // 发送 AJAX 请求到后端
+            // バックエンドへ AJAX リクエストを送信
             fetch('/append_today_food', {
                 method: 'POST',
                 headers: {
@@ -100,12 +100,12 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.code === 200) {
-                        addNotification("✅ 補充完了");
+                        addNotification("✅ 補充が完了しました");
                     } else {
                         error_alert(data.msg);
                     }
                 })
-                .catch(err => console.error('请求失败', err));
+                .catch(err => console.error('リクエストに失敗しました', err));
             // --------------------------
         });
 
@@ -113,7 +113,7 @@
 
     function loadDishes() {
         // --------------------------
-        // 发送 AJAX 请求到后端
+        // バックエンドへ AJAX リクエストを送信
         fetch('/today_foods', {
             headers: {
                 'Content-Type': 'application/json'
@@ -128,11 +128,11 @@
 
                     if (data.decay_status == "paused") {
                         $("#toggle-btn").text("▶️ 再開");
-                        stopAutoRefresh();  // ✅ 停止前端刷新
+                        stopAutoRefresh();  // ✅ フロントエンドの更新を停止
                         isRunning = false;
                     } else {
                         $("#toggle-btn").text("⏸️ 一時停止");
-                        startAutoRefresh(); // ✅ 恢复前端刷新
+                        startAutoRefresh(); // ✅ フロントエンドの更新を再開
                         isRunning = true;
                     }
 
@@ -181,7 +181,7 @@
                     error_alert(data.msg);
                 }
             })
-            .catch(err => console.error('请求失败', err));
+            .catch(err => console.error('リクエストに失敗しました', err));
         // --------------------------
     }
 </script>

@@ -3,19 +3,19 @@
 {% block content %}
 
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">🍱 毎日食品</h1>
+    <h1 class="text-3xl font-bold">🍱 毎日の食品</h1>
 </div>
 
 <div class="overflow-x-auto">
-    <!-- 🔍 搜索框 -->
+    <!-- 🔍 検索欄 -->
     <div class="flex justify-between items-center mb-4">
-        <!-- <h2 class="text-xl font-semibold text-slate-200">🍱 菜品列表</h2> -->
+        <!-- <h2 class="text-xl font-semibold text-slate-200">🍱 食品一覧</h2> -->
         <form class="space-y-4" action="/days" method="POST">
             <div class="relative bg-slate-800 p-2 rounded-lg">
-                <input name="keyword" type="text" placeholder="名称検索..." value="{{ keyword or '' }}"
+                <input name="keyword" type="text" placeholder="名称で検索..." value="{{ keyword or '' }}"
                     class="pl-4 pr-4 py-2 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-slate-600 shadow-sm transition duration-200"
                     style="background-color: #334155; color: #f1f5f9;">
-                <!-- 日期搜索 -->
+                <!-- 日付検索 -->
                 <input name="date" type="date" value="{{ date or '' }}"
                     class="pl-4 pr-4 py-2 rounded-lg bg-slate-700 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition duration-200"
                     style="background-color: #334155; color: #f1f5f9;">
@@ -45,16 +45,17 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="4" class="text-slate-400 text-center">利用可能なデータはありません</td>
+                <td colspan="4" class="text-slate-400 text-center">表示可能なデータはありません</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
     <div id="pagination-area">
-        <!-- 🌟 分页导航 -->
+        <!-- 🌟 ページネーション -->
         {% if pagination.pages >= 1 %}
         <nav class="flex justify-center items-center mt-6 space-x-2">
-            <!-- 上一页 -->
+            <!-- 前のページ -->
             {% if pagination.has_prev %}
             <a href="{{ url_for('days', page=pagination.prev_num, keyword=keyword, date=date) }}"
                 class="px-3 py-1 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition">«</a>
@@ -62,7 +63,7 @@
             <span class="px-3 py-1 rounded-lg bg-slate-900 text-slate-600 cursor-not-allowed">«</span>
             {% endif %}
 
-            <!-- 页码循环 -->
+            <!-- ページ番号 -->
             {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
             {% if p %}
             {% if p == pagination.page %}
@@ -76,7 +77,7 @@
             {% endif %}
             {% endfor %}
 
-            <!-- 下一页 -->
+            <!-- 次のページ -->
             {% if pagination.has_next %}
             <a href="{{ url_for('days', page=pagination.next_num, keyword=keyword, date=date) }}"
                 class="px-3 py-1 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition">»</a>
@@ -86,13 +87,11 @@
         </nav>
         {% endif %}
     </div>
-
-
 </div>
+
 {% endblock %}
 
 {% block js %}
 <script>
-
 </script>
 {% endblock %}

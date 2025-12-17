@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>登录 - KDS 機能</title>
+    <title>ログイン - KDS 機能</title>
     <link href="{{ url_for('static', filename='tailwind.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
@@ -11,14 +11,15 @@
 <body>
     <div class="login-container">
         <div class="login-box">
-            <h1 class="mb-5 text-center">登录 KDS 機能</h1>
+            <h1 class="mb-5 text-center">KDS 機能にログイン</h1>
             <form id="login-form">
-                <input type="text" id="username" class="login-input" placeholder="名前" required>
+                <input type="text" id="username" class="login-input" placeholder="ユーザー名" required>
                 <input type="password" id="password" class="login-input" placeholder="パスワード" required>
-                <button type="submit" class="login-btn">登录</button>
+                <button type="submit" class="login-btn">ログイン</button>
             </form>
         </div>
     </div>
+
     <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
 
@@ -31,7 +32,7 @@
             const password = document.getElementById('password').value;
 
             // --------------------------
-            // 发送 AJAX 请求到后端
+            // バックエンドへ AJAX リクエストを送信
             fetch('/login', {
                 method: 'POST',
                 headers: {
@@ -42,25 +43,25 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.code === 200) {
-                        // 这里可以添加你的验证逻辑，比如直接跳转到主页
+                        // ここに認証後の処理を追加（例：ホーム画面へ遷移）
                         Swal.fire({
-                            title: '登录成功！',
-                            text: '欢迎回来，厨师长 👨‍🍳',
+                            title: 'ログイン成功！',
+                            text: 'お帰りなさい、料理長 👨‍🍳',
                             icon: 'success',
                             background: '#1e293b',
                             color: '#f1f5f9',
                             confirmButtonColor: '#3b82f6',
-                            timer: 2000, // 弹窗显示 2 秒
-                            showConfirmButton: false, // 不显示确认按钮
+                            timer: 2000, // ポップアップを2秒表示
+                            showConfirmButton: false, // 確認ボタンを非表示
                             didClose: () => {
-                                window.location.href = '/'; // 跳转到后台主页
+                                window.location.href = '/'; // 管理画面トップへ遷移
                             }
                         });
                     } else {
                         error_alert(data.msg);
                     }
                 })
-                .catch(err => console.error('请求失败', err));
+                .catch(err => console.error('リクエストに失敗しました', err));
             // --------------------------
 
         });

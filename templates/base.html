@@ -10,19 +10,19 @@
 
 <body class="font-sans">
     <div class="flex min-h-screen">
-        <!-- 左侧菜单 -->
+        <!-- 左側メニュー -->
         <nav class="sidebar flex flex-col p-4">
-            <h2 class="text-xl font-bold mb-4">👨‍🍳 厨房 KDS</h2>
+            <h2 class="text-xl font-bold mb-4">👨‍🍳 キッチン KDS</h2>
             <a href="/" class="{% if request.path == '/' %}active{% endif %}">ホーム</a>
             <a href="/totals" class="{% if request.path == '/totals' %}active{% endif %}">統計</a>
             <a href="/foods" class="{% if request.path == '/foods' %}active{% endif %}">食品管理</a>
-            <a href="/days" class="{% if request.path == '/days' %}active{% endif %}">毎日食品</a>
-            <a href="/chefs" class="{% if request.path == '/chefs' %}active{% endif %}">管理人</a>
+            <a href="/days" class="{% if request.path == '/days' %}active{% endif %}">日別食品</a>
+            <a href="/chefs" class="{% if request.path == '/chefs' %}active{% endif %}">管理者</a>
         </nav>
 
-        <!-- 主体部分（左侧菜单 + 内容） -->
+        <!-- メインエリア -->
         <div class="flex flex-1 flex-col">
-            <!-- 顶部导航栏 -->
+            <!-- トップナビゲーション -->
             <header class="fixed top-0 left-56 right-0 flex items-center justify-between p-4 shadow z-50">
                 <div class="flex items-center gap-3">
                     <div class="bg-blue-600 p-2 rounded-lg">👨‍🍳</div>
@@ -31,8 +31,8 @@
 
                 <div class="relative">
                     <button id="userMenuButton" class="flex items-center space-x-2 rounded-lg px-3 py-1">
-                        <img src="{{ url_for('static', filename='user.png') }}" alt="User" class="w-8 h-8 rounded-full">
-                        <span id="chef-nickname">{{ session.get('nickname', '未登录') }}</span>
+                        <img src="{{ url_for('static', filename='user.png') }}" alt="ユーザー" class="w-8 h-8 rounded-full">
+                        <span id="chef-nickname">{{ session.get('nickname', '未ログイン') }}</span>
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -48,14 +48,15 @@
                 </div>
             </header>
 
-            <!-- 主体内容 -->
+            <!-- メインコンテンツ -->
             <main class="flex-1 p-6 mt-16">
                 {% block content %}{% endblock %}
                 <div id="notifications" class="fixed bottom-6 right-6 space-y-2"></div>
             </main>
         </div>
     </div>
-    <!-- 弹窗 -->
+
+    <!-- モーダル -->
     <div id="set-modal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-60 z-50">
         <div class="bg-slate-700/80 backdrop-blur-md p-6 rounded-lg w-96 shadow-lg border border-slate-600/50">
             <h2 class="text-xl font-bold mb-4">設定</h2>
@@ -66,15 +67,15 @@
                         placeholder="名前を入力してください" required>
                 </div>
                 <div>
-                    <label class="block text-slate-200 mb-1">当前密码</label>
-                    <input type="password" id="password" class="modal-input" placeholder="パスワードを入力してください">
+                    <label class="block text-slate-200 mb-1">現在のパスワード</label>
+                    <input type="password" id="password" class="modal-input" placeholder="現在のパスワードを入力してください">
                 </div>
                 <div>
-                    <label class="block text-slate-200 mb-1">新密码</label>
+                    <label class="block text-slate-200 mb-1">新しいパスワード</label>
                     <input type="password" id="new-password" class="modal-input" placeholder="新しいパスワードを入力してください">
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="button" id="cancel-set" class="modal-btn modal-btn-cancel">取消</button>
+                    <button type="button" id="cancel-set" class="modal-btn modal-btn-cancel">キャンセル</button>
                     <button type="submit" class="modal-btn modal-btn-primary">保存</button>
                 </div>
             </form>
@@ -86,6 +87,7 @@
     <script src="{{ url_for('static', filename='sweetalert2@11.js') }}"></script>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
     {% block js %}{% endblock %}
+
     <script>
         const addSet = document.getElementById('add-set');
         const setModal = document.getElementById('set-modal');
@@ -108,33 +110,32 @@
             const password = document.getElementById('password').value;
             const new_password = document.getElementById('new-password').value;
 
-            // --------------------------
-            // 发送 AJAX 请求到后端
+            // AJAXでサーバーに送信
             fetch('/set_chef', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nickname: nickname, password: password, new_password: new_password })
+                body: JSON.stringify({
+                    nickname: nickname,
+                    password: password,
+                    new_password: new_password
+                })
             })
                 .then(res => res.json())
                 .then(data => {
                     if (data.redirect) {
                         window.location.href = data.redirect;
                     } else if (data.code === 200) {
-                        // 隐藏表单
                         setModal.classList.add('hidden');
                         setModal.classList.remove('flex');
-                        // 更新前端显示昵称（比如导航栏上）
                         document.getElementById("chef-nickname").textContent = data.nickname;
-
                         success_alert(data.msg);
                     } else {
                         error_alert(data.msg);
                     }
                 })
-                .catch(err => console.error('请求失败', err));
-            // --------------------------
+                .catch(err => console.error('リクエスト失敗', err));
         });
 
         $(document).ready(function () {
@@ -142,7 +143,7 @@
                 $('#userDropdown').toggleClass('hidden');
             });
 
-            // 点击外部区域关闭菜单
+            // 外側クリックで閉じる
             $(document).on('click', function (e) {
                 if (!$(e.target).closest('#userMenuButton, #userDropdown').length) {
                     $('#userDropdown').addClass('hidden');

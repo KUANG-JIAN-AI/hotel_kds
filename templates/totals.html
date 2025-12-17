@@ -3,12 +3,12 @@
 {% block content %}
 
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">📊 直近30日食材统计</h1>
+    <h1 class="text-3xl font-bold">📊 直近30日間の食材統計</h1>
 
     <div class="space-x-2">
         <button id="toggleChartTypeBtn"
             class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-4 py-2 rounded-md transition">
-            切换为折线图
+            折れ線グラフに切り替え
         </button>
     </div>
 </div>
@@ -29,7 +29,7 @@ $(function () {
     const labels = Object.keys(chartData);
     const getColor = () => `hsl(${Math.floor(Math.random()*360)},70%,60%)`;
 
-    // 🔹 构建所有菜品数据集
+    // 🔹 全ての料理データセットを作成
     const fullDatasets = allFoods.map(food => {
         const dataPoints = labels.map(date => chartData[date][food] || 0);
         return {
@@ -41,19 +41,19 @@ $(function () {
         };
     });
 
-    // 🔹 过滤掉全为 0 的菜品
+    // 🔹 全て0の料理を除外
     const filteredDatasets = fullDatasets.filter(ds => ds.data.some(v => v > 0));
 
-    // 🔹 计算每日总重量折线数据
+    // 🔹 日別の総重量（折れ線用）を計算
     const totalLineData = labels.map(date => {
         const dayData = chartData[date];
         if (!dayData) return 0;
         return Object.values(dayData)
-            .map(v => Number(v) || 0)   // ✅ 强制转换为数字
+            .map(v => Number(v) || 0)   // ✅ 数値へ強制変換
             .reduce((a, b) => a + b, 0);
     });
 
-    // 🔹 添加折线图（总量趋势）
+    // 🔹 折れ線グラフ（総量トレンド）を追加
     const totalLineDataset = {
         label: '総重量',
         data: totalLineData,
@@ -63,12 +63,12 @@ $(function () {
         borderWidth: 2,
         tension: 0.3,
         fill: false,
-        yAxisID: 'y1' // ✅ 使用右侧轴
+        yAxisID: 'y1' // ✅ 右側の軸を使用
     };
 
-     let chartType = 'bar'; // 当前图表类型
+    let chartType = 'bar'; // 現在のグラフタイプ
 
-    // 🔹 初始化 Chart.js
+    // 🔹 Chart.js 初期化
     const ctx = document.getElementById('dailyChart').getContext('2d');
     const chart = new Chart(ctx, {
         type: 'bar',
@@ -81,7 +81,7 @@ $(function () {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
 
-            // ✅ 动画配置
+            // ✅ アニメーション設定
             animation: {
                 duration: 1200,
                 easing: 'easeInOutCubic'
@@ -102,14 +102,14 @@ $(function () {
                     beginAtZero: true,
                     ticks: { color: '#d1d5db' },
                     grid: { color: '#374151' },
-                    title: { display: true, text: '各料理重量(g)', color: '#9ca3af' }
+                    title: { display: true, text: '各料理の重量 (g)', color: '#9ca3af' }
                 },
                 y1: {
                     position: 'right',
                     beginAtZero: true,
                     grid: { drawOnChartArea: false },
                     ticks: { color: '#f472b6' },
-                    title: { display: true, text: '総重量(g)', color: '#f472b6' }
+                    title: { display: true, text: '総重量 (g)', color: '#f472b6' }
                 }
             },
             plugins: {
@@ -119,7 +119,7 @@ $(function () {
                 },
                 title: {
                     display: true,
-                    text: '直近30日食材重量推移',
+                    text: '直近30日間の食材重量推移',
                     color: '#f9fafb',
                     font: { size: 18 }
                 },
@@ -127,7 +127,7 @@ $(function () {
                     mode: 'index',
                     intersect: false,
                     callbacks: {
-                        // ✅ tooltip内容过滤掉为0的菜品，并显示总量
+                        // ✅ 0の料理を非表示にし、総量を表示
                         label: function (ctx) {
                             if (ctx.dataset.label === '総重量') {
                                 const val = Number(ctx.dataset.data[ctx.dataIndex]) || 0;
@@ -148,12 +148,13 @@ $(function () {
         }
     });
 
-    // 🔘 切换图表类型（柱形 <-> 折线）
+    // 🔘 グラフタイプ切り替え（棒グラフ ⇄ 折れ線グラフ）
     $('#toggleChartTypeBtn').on('click', function () {
         if (chartType === 'bar') {
-            // 切换为折线图
+            // 折れ線グラフへ切り替え
             chartType = 'line';
-            // 过滤掉全为0的菜品
+
+            // 全て0ではない料理のみ抽出
             const nonZeroLineDatasets = fullDatasets
                 .filter(ds => ds.data.some(v => v > 0))
                 .map(ds => ({
@@ -163,24 +164,24 @@ $(function () {
                     borderWidth: 2,
                     borderColor: ds.backgroundColor,
                     yAxisID: 'y',
-                    tension: 0.3,           // ✅ 曲线平滑度
-                    pointRadius: 3,         // ✅ 小圆点
+                    tension: 0.3,           // ✅ 曲線の滑らかさ
+                    pointRadius: 3,         // ✅ ポイントサイズ
                     pointHoverRadius: 5
                 }));
 
-            // 把数据集替换为：非零菜品折线 + 总重量折线
+            // データセットを置き換え（料理の折れ線 + 総重量）
             chart.data.datasets = [...nonZeroLineDatasets, totalLineDataset];
-            
-            $(this).text('棒グラフ切换');
+            $(this).text('棒グラフに切り替え');
 
-            // 🪄 平滑过渡动画
+            // 🪄 スムーズなアニメーション
             chart.update({
                 duration: 1000,
                 easing: 'easeInOutCubic'
             });
         } else {
-            // 切换回堆叠柱形图
+            // 積み上げ棒グラフへ戻す
             chartType = 'bar';
+
             const barDatasets = filteredDatasets.map(ds => ({
                 ...ds,
                 type: 'bar',
@@ -189,8 +190,9 @@ $(function () {
             }));
 
             chart.data.datasets = [...barDatasets, totalLineDataset];
-            $(this).text('折線グラフ切换');
-            // 🪄 平滑过渡动画
+            $(this).text('折れ線グラフに切り替え');
+
+            // 🪄 スムーズなアニメーション
             chart.update({
                 duration: 1000,
                 easing: 'easeInOutCubic'
