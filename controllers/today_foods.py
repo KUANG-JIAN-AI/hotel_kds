@@ -12,26 +12,27 @@ def get_today_foods():
     foods = (
         TodayFoods.query.filter_by(record_date=today)
         .filter_by(status=1)
-        .options(joinedload(TodayFoods.food))  # ✅ 一次性加载 Foods
+        .options(joinedload(TodayFoods.food))  # ✅ Foods を一括ロード
         .order_by(TodayFoods.id.desc())
         .all()
     )
 
     data = [f.to_dict() for f in foods]
-    # 🔢 统计数量
+
+    # 🔢 件数集計
     total = len(data)
     warning = sum(1 for f in data if f["remain"] == 1)
     critical = sum(1 for f in data if f["remain"] == 2)
     empty = sum(1 for f in data if f["remain"] == 3)
 
-    # ✅ 定时任务状态（True = 运行中, False = 暂停中）
+    # ✅ 定期タスク状態（True = 実行中, False = 停止中）
     decay_status = "running" if load_status() else "paused"
 
     return (
         jsonify(
             {
                 "code": 200,
-                "msg": "success",
+                "msg": "取得に成功しました",
                 "data": data,
                 "stats": {
                     "total": total,
@@ -39,7 +40,7 @@ def get_today_foods():
                     "critical": critical,
                     "empty": empty,
                 },
-                "decay_status": decay_status,  # 👈 新增字段
+                "decay_status": decay_status,  # 👈 追加項目
             }
         ),
         200,
@@ -52,25 +53,25 @@ def add_today_food():
     food_id = data.get("food_id", 0)
 
     if not food_id:
-        return jsonify({"code": 400, "msg": "食品ID不存在"}), 400
+        return jsonify({"code": 400, "msg": "食品IDが存在しません"}), 400
 
     food = Foods.query.filter_by(id=food_id).first()
     if not food:
-        return jsonify({"code": 400, "msg": "食品不存在"}), 400
+        return jsonify({"code": 400, "msg": "食品が存在しません"}), 400
 
     today_food = TodayFoods.query.filter_by(
         food_id=food_id, record_date=date.today()
     ).first()
 
     try:
-        # 从 Foods 复制必要字段到 TodayFoods
+        # Foods から TodayFoods に必要な項目をコピー
         if today_food:
-            # ✅ 已存在：只更新 status=1
+            # ✅ 既に存在する場合：status を 1 に更新
             today_food.status = 1
             db.session.commit()
-            msg = "菜品已存在，已重新激活"
+            msg = "既存の食品を再有効化しました"
         else:
-            # ✅ 不存在：新增记录
+            # ✅ 存在しない場合：新規追加
             today_food = TodayFoods(
                 food_id=food.id,
                 total_weight=food.weight,
@@ -81,7 +82,7 @@ def add_today_food():
             )
             db.session.add(today_food)
             db.session.commit()
-            msg = "菜品已添加"
+            msg = "食品を追加しました"
 
         return (
             jsonify({"code": 200, "msg": msg, "data": today_food.to_dict()}),
@@ -89,7 +90,7 @@ def add_today_food():
         )
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500
+        return jsonify({"code": 500, "msg": f"データベースエラー：{str(e)}"}), 500
 
 
 def del_today_food():
@@ -98,30 +99,29 @@ def del_today_food():
     food_id = data.get("food_id", 0)
 
     if not food_id:
-        return jsonify({"code": 400, "msg": "食品ID不存在"}), 400
+        return jsonify({"code": 400, "msg": "食品IDが存在しません"}), 400
 
     food = Foods.query.filter_by(id=food_id).first()
     if not food:
-        return jsonify({"code": 400, "msg": "食品不存在"}), 400
+        return jsonify({"code": 400, "msg": "食品が存在しません"}), 400
 
     today_food = TodayFoods.query.filter_by(
         food_id=food_id, record_date=date.today()
     ).first()
 
     if not today_food:
-        return jsonify({"code": 400, "msg": "今日食品不存在"}), 400
+        return jsonify({"code": 400, "msg": "本日の食品データが存在しません"}), 400
 
     try:
         today_food.status = 2
-
         db.session.commit()
         return (
-            jsonify({"code": 200, "msg": "success", "data": today_food.to_dict()}),
+            jsonify({"code": 200, "msg": "下架に成功しました", "data": today_food.to_dict()}),
             200,
         )
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500
+        return jsonify({"code": 500, "msg": f"データベースエラー：{str(e)}"}), 500
 
 
 def append_food():
@@ -130,36 +130,38 @@ def append_food():
     today_id = data.get("today_id", 0)
 
     if not today_id:
-        return jsonify({"code": 400, "msg": "今日食品ID不存在"}), 400
+        return jsonify({"code": 400, "msg": "本日の食品IDが存在しません"}), 400
 
     today_food = TodayFoods.query.filter_by(id=today_id).first()
 
     if not today_food or not today_food.food:
-        return jsonify({"code": 400, "msg": "今日食品不存在"}), 400
+        return jsonify({"code": 400, "msg": "本日の食品データが存在しません"}), 400
 
     try:
-        # 从foods表取初始份量
+        # Foods テーブルから初期重量を取得
         add_weight = today_food.food.weight or 0
 
         if add_weight <= 0:
-            return jsonify({"code": 400, "msg": "该菜品未设置初始份量，无法累加"}), 400
+            return jsonify(
+                {"code": 400, "msg": "初期重量が設定されていないため、追加できません"}
+            ), 400
 
-        # 更新今日菜品重量
+        # 本日の食品重量を更新
         today_food.total_weight += add_weight
         today_food.current_weight += add_weight
 
         db.session.commit()
         return (
-            jsonify({"code": 200, "msg": "success", "data": today_food.to_dict()}),
+            jsonify({"code": 200, "msg": "上架に成功しました", "data": today_food.to_dict()}),
             200,
         )
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({"code": 500, "msg": f"数据库错误：{str(e)}"}), 500
+        return jsonify({"code": 500, "msg": f"データベースエラー：{str(e)}"}), 500
 
 
 def stats():
-    """获取近30天菜品重量统计"""
+    """直近30日間の食品重量統計を取得"""
     today = date.today()
     start_date = today - timedelta(days=30)
 
@@ -188,11 +190,11 @@ def stats():
 
 
 def get_days():
-    # 获取当前页码（默认第1页）
+    # 現在のページ番号を取得（デフォルト：1）
     page = request.args.get("page", 1, type=int)
-    per_page = 10  # 每页显示条数
+    per_page = 10  # 1ページあたりの表示件数
 
-    # 如果是 POST 搜索
+    # POST 検索の場合
     if request.method == "POST":
         keyword = request.form.get("keyword", "").strip()
     else:
@@ -203,6 +205,7 @@ def get_days():
         if request.method == "POST"
         else request.args.get("date", "").strip()
     )
+
     query = TodayFoods.active().join(TodayFoods.food)
 
     if date_str:
@@ -210,17 +213,18 @@ def get_days():
             target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
             query = query.filter(TodayFoods.record_date == target_date)
         except ValueError:
-            pass  # 忽略无效日期格式
+            pass  # 無効な日付形式は無視
 
-    # 构建查询
+    # 検索条件の構築
     if keyword:
         query = query.filter(Foods.name.like(f"%{keyword}%"))
 
-    # 分页查询
+    # ページネーション
     pagination = (
         query.order_by(TodayFoods.id.desc())
-        .options(joinedload(TodayFoods.food))  # ✅ 一次性加载 Foods
+        .options(joinedload(TodayFoods.food))  # ✅ Foods を一括ロード
         .paginate(page=page, per_page=per_page, error_out=False)
-    )  # ✅ 一次性加载 Foods
+    )
+
     foods = pagination.items
     return foods, pagination, request, keyword, date_str

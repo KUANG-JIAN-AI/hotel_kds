@@ -348,4 +348,4 @@ def toggle_decay():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # ✅ 建库 + 确保上下文绑定
-    app.run(debug=True, port=9000, use_reloader=False)
+    app.run(host="0.0.0.0", debug=True, port=9000, use_reloader=False)
