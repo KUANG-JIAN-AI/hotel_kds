@@ -1,1 +1,9 @@
 pip install -r requirements.txt
+
+启动服务
+sudo systemctl start hotel
+
+sudo systemctl enable hotel
+
+查看状态
+sudo systemctl status hotel
