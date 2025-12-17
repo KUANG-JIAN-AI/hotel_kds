@@ -3,9 +3,9 @@
 {% block content %}
 
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">🍽️ 菜品列表</h1>
+    <h1 class="text-3xl font-bold">🍽️ メニュー表</h1>
     <button id="add-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg">
-        ➕ 添加菜品
+        ➕ 料理を追加
     </button>
 </div>
 
@@ -16,8 +16,8 @@
                 <th class="text-left text-slate-200">ID</th>
                 <th class="text-left text-slate-200">菜名</th>
                 <th class="text-left text-slate-200">重量(g)</th>
-                <th class="text-left text-slate-200">状态</th>
-                <th class="text-left text-slate-200">补充建议</th>
+                <th class="text-left text-slate-200">状態</th>
+                <th class="text-left text-slate-200">補足</th>
             </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@
                 <td class="text-slate-100">ティラミス</td>
                 <td class="text-slate-100">20</td>
                 <td><span class="status-critical">至急補充</span></td>
-                <td class="text-slate-100">立即补充</td>
+                <td class="text-slate-100">直ちに補充</td>
             </tr>
         </tbody>
     </table>
@@ -59,18 +59,18 @@
 <!-- 弹窗 -->
 <div id="modal" class="fixed inset-0 hidden items-center justify-center modal-overlay z-50">
     <div class="bg-slate-800 p-6 rounded-lg w-96 shadow-lg">
-        <h2 class="text-xl font-bold mb-4">添加新菜品</h2>
+        <h2 class="text-xl font-bold mb-4">新しい料理を追加する</h2>
         <form id="add-form" class="space-y-4">
             <div>
-                <label class="block text-slate-200 mb-1">菜名</label>
-                <input type="text" id="dish-name" class="modal-input" placeholder="请输入菜名" required>
+                <label class="block text-slate-200 mb-1">料理名</label>
+                <input type="text" id="dish-name" class="modal-input" placeholder="料理名を入力" required>
             </div>
             <div>
                 <label class="block text-slate-200 mb-1">重量(g)</label>
-                <input type="number" id="dish-weight" class="modal-input" placeholder="请输入重量" required>
+                <input type="number" id="dish-weight" class="modal-input" placeholder="重量を入力" required>
             </div>
             <div>
-                <label class="block text-slate-200 mb-1">状态</label>
+                <label class="block text-slate-200 mb-1">状態</label>
                 <select id="dish-status" class="modal-select" required>
                     <option value="normal">十分</option>
                     <option value="warning">補充推奨</option>
@@ -78,12 +78,12 @@
                 </select>
             </div>
             <div>
-                <label class="block text-slate-200 mb-1">补充建议</label>
-                <input type="text" id="dish-advice" class="modal-input" placeholder="请输入补充建议">
+                <label class="block text-slate-200 mb-1">補足</label>
+                <input type="text" id="dish-advice" class="modal-input" placeholder="補足があれば追加">
             </div>
             <div class="flex justify-end gap-2">
                 <button type="button" id="cancel-btn" class="modal-btn modal-btn-cancel">取消</button>
-                <button type="submit" class="modal-btn modal-btn-primary">添加</button>
+                <button type="submit" class="modal-btn modal-btn-primary">追加</button>
             </div>
         </form>
     </div>
