@@ -156,11 +156,19 @@
                             progressClass = "progress-critical";
                             statusText = "至急補充";
                             statusIcon = ICON.alert;
+
+                            // 🔊 播放警告音
+                            const audio = new Audio('/static/warning.mp3');
+                            audio.play().catch(err => console.log('音声の再生に失敗しました:', err));
                         } else if (d.remain == 3) {
                             cardClass = "empty-bg";
                             progressClass = "progress-empty";
                             statusText = "売り切れ";
                             statusIcon = ICON.close;
+
+                            // 🔊 播放警报音
+                            const audio = new Audio('/static/alert.mp3');
+                            audio.play().catch(err => console.log('音声の再生に失敗しました:', err));
                         }
 
                         const $dish = $(`
