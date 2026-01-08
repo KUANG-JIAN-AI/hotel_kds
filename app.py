@@ -13,6 +13,7 @@ from controllers.today_foods import (
     del_today_food,
     get_days,
     get_today_foods,
+    seed_today_foods,
     stats,
 )
 from models import Foods, TodayFoods, db, Chefs
@@ -344,6 +345,9 @@ def toggle_decay():
     print(f"当前衰减状态: {status}, 启动标志: {is_decay_enabled}")
     return jsonify({"code": 200, "msg": "success", "status": status})
 
+@app.route("/test_data", methods=["GET"])
+def test_data():
+    return seed_today_foods()
 
 if __name__ == "__main__":
     with app.app_context():

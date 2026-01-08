@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+import random
 from flask import jsonify, request
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
@@ -174,18 +175,24 @@ def stats():
         .join(Foods, TodayFoods.food_id == Foods.id)
         .filter(TodayFoods.record_date >= start_date)
         .group_by(TodayFoods.record_date, Foods.name)
-        .order_by(TodayFoods.record_date)
+        .order_by(TodayFoods.record_date.asc())  # SQL层按日期升序
         .all()
     )
 
     data = {}
     for r in results:
-        date_str = r.record_date.strftime("%m-%d")
+        # ⚡ 用完整年份-month-day 生成键，保证排序正确
+        date_str = r.record_date.strftime("%Y-%m-%d")
         if date_str not in data:
             data[date_str] = {}
         data[date_str][r.name] = r.total_weight
 
+    # 食品名称排序
     food_names = sorted({r.name for r in results})
+
+    # ⚡ Python层按照完整日期排序
+    data = dict(sorted(data.items(), key=lambda x: x[0]))
+
     return data, food_names
 
 
@@ -228,3 +235,68 @@ def get_days():
 
     foods = pagination.items
     return foods, pagination, request, keyword, date_str
+
+def seed_today_foods():
+    start_str = request.args.get("start")
+    end_str = request.args.get("end")
+
+    if not start_str or not end_str:
+        return jsonify({"error": "请提供 start 和 end 参数，如 ?start=2025-11-01&end=2026-01-07"}), 400
+
+    try:
+        start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"error": "日期格式错误，应为 YYYY-MM-DD"}), 400
+
+    if start_date > end_date:
+        return jsonify({"error": "开始日期不能大于结束日期"}), 400
+
+    inserted_count = 0
+    current_date = start_date
+    now = datetime.now()
+
+    try:
+        while current_date <= end_date:
+            num_records = random.randint(10, 15)
+            for _ in range(num_records):
+                food_id = random.randint(1, 40)
+                total_weight = random.randint(500, 1000)
+                current_weight = random.randint(0, total_weight)
+
+                # 自动设置库存状态 remain
+                if current_weight <= 0:
+                    remain = 3  # 卖完
+                elif current_weight < total_weight * 0.2:
+                    remain = 2  # 危险
+                elif current_weight < total_weight * 0.4:
+                    remain = 1  # 警告
+                else:
+                    remain = 0  # 正常
+
+                today_food = TodayFoods(
+                    food_id=food_id,
+                    total_weight=total_weight,
+                    current_weight=current_weight,
+                    record_date=current_date,
+                    status=1,
+                    remain=remain,
+                    created_at=now,
+                    updated_at=now,
+                )
+
+                db.session.add(today_food)
+                inserted_count += 1
+
+            current_date += timedelta(days=1)
+
+        db.session.commit()
+        return jsonify({
+            "message": "today_foods 数据生成成功",
+            "inserted_count": inserted_count,
+            "start": str(start_date),
+            "end": str(end_date)
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
