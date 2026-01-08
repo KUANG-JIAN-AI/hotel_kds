@@ -27,15 +27,23 @@ $(function () {
     const chartData = {{ data|default({})|tojson }};
     const allFoods = {{ foods|default([])|tojson }};
     const labels = Object.keys(chartData);
-    const getColor = () => `hsl(${Math.floor(Math.random()*360)},70%,60%)`;
 
+    // 🎨 根据食材名生成稳定颜色（固定且区分明显）
+    const getColorByName = (name) => {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue},70%,55%)`;
+    };
     // 🔹 全ての料理データセットを作成
     const fullDatasets = allFoods.map(food => {
         const dataPoints = labels.map(date => chartData[date][food] || 0);
         return {
             label: food,
             data: dataPoints,
-            backgroundColor: getColor(),
+            backgroundColor: getColorByName(food),
             stack: 'total',
             yAxisID: 'y'
         };
@@ -130,8 +138,7 @@ $(function () {
                         // ✅ 0の料理を非表示にし、総量を表示
                         label: function (ctx) {
                             if (ctx.dataset.label === '総重量') {
-                                const val = Number(ctx.dataset.data[ctx.dataIndex]) || 0;
-                                return `総重量: ${val} g`;
+                                return null;
                             }
                             const val = Number(ctx.parsed.y) || 0;
                             return val > 0 ? `${ctx.dataset.label}: ${val} g` : null;
