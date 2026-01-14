@@ -94,3 +94,4 @@ docker-compose.override.yml
 # ==============================
 # 如果有生产环境配置（例如 config_prod.py 或 .env.prod），
 # 请务必加到 .gitignore，防止敏感信息被上传。
+task_status.json1
