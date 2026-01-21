@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 from hx711 import HX711
 import time
+import requests
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -20,7 +21,7 @@ while True:
         # 构造要发送的数据
         payload = {
             "food_id": FOOD_ID,
-            "weight": max(0, weight)
+            "weight": max(0, w)
         }
         # 通过网络发送到云端
         response = requests.post(CLOUD_URL, json=payload, timeout=5)
