@@ -349,6 +349,43 @@ def toggle_decay():
 def test_data():
     return seed_today_foods()
 
+# 这个接口负责接收从“树莓派”发来的重量
+@app.route('/api/update_weight', methods=['POST'])
+def update_weight():
+    data = request.get_json()
+    print(data)
+    if not data:
+        return jsonify({"msg": "无数据"}), 400
+    
+    food_id = data.get('food_id')
+    weight = data.get('weight')
+    
+    with app.app_context():
+        # 查找当天的这条菜品记录
+        tf = TodayFoods.query.filter_by(food_id=food_id, record_date=date.today()).first()
+        if not tf:
+            return jsonify({"msg": "未找到对应的今日菜品"}), 404
+        
+        f = tf.food
+        # 更新重量
+        tf.current_weight = float(weight)
+        
+        # 自动判定状态 (remain)
+        if tf.current_weight <= 0:
+            tf.remain = 3  # 卖完
+        elif tf.current_weight <= f.critical_threshold:
+            tf.remain = 2  # 至急
+        elif tf.current_weight <= f.warning_threshold:
+            tf.remain = 1  # 警告
+        else:
+            tf.remain = 0  # 正常
+            
+        tf.updated_at = datetime.now()
+        db.session.commit()
+        
+    print(f"收到 API 更新：菜品ID {food_id}, 当前重量 {weight}g")
+    return jsonify({"msg": "更新成功"}), 200
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # ✅ 建库 + 确保上下文绑定

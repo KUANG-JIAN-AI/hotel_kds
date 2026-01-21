@@ -4,3 +4,5 @@ pymysql
 tzdata
 apscheduler
 python-dotenv
+RPi.GPIO
+hx711
