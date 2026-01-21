@@ -32,10 +32,24 @@ $(function () {
     const getColorByName = (name) => {
         let hash = 0;
         for (let i = 0; i < name.length; i++) {
+            // 使用稍微复杂的哈希计算
             hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            hash = hash & hash; // 转换为32位整数
         }
-        const hue = Math.abs(hash) % 360;
-        return `hsl(${hue},70%,55%)`;
+
+        // 1. 使用黄金分割率 (约 0.618) 分散色相，避免相邻颜色太接近
+        const goldenRatioConjugate = 0.618033988749895;
+        let h = Math.abs(hash) * goldenRatioConjugate;
+        const hue = (h % 1) * 360;
+
+        // 2. 根据哈希值交替改变明度 (45% - 65%)，进一步增加区分度
+        // 这样即使颜色接近，一个深一个浅也能分得开
+        const lightness = 45 + (Math.abs(hash) % 20); 
+        
+        // 3. 保持中高饱和度
+        const saturation = 65 + (Math.abs(hash) % 15);
+
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     };
     // 🔹 全ての料理データセットを作成
     const fullDatasets = allFoods.map(food => {
@@ -134,20 +148,30 @@ $(function () {
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    // 💡 核心排序逻辑
+                    itemSort: function(a, b) {
+                        // 如果是柱状图，反转顺序（让顶层柱子排在 Tooltip 最上方）
+                        if (chartType === 'bar') {
+                            return b.datasetIndex - a.datasetIndex;
+                        }
+                        // 如果是折线图，按数值大小降序排列（大的在前）
+                        return b.raw - a.raw;
+                    },
                     callbacks: {
-                        // ✅ 0の料理を非表示にし、総量を表示
+                        // ✅ 过滤掉“总重量”折线在列表中的重复显示
                         label: function (ctx) {
-                            if (ctx.dataset.label === '総重量') {
-                                return null;
+                            if (ctx.dataset.label === '总重量' || ctx.dataset.label === '総重量') {
+                                return null; // 不在列表中显示单行总重
                             }
                             const val = Number(ctx.parsed.y) || 0;
                             return val > 0 ? `${ctx.dataset.label}: ${val} g` : null;
                         },
+                        // ✅ 统一在底部显示“合计”
                         afterBody: function (items) {
                             const total = items
-                                .filter(i => i.dataset.label !== '総重量')
+                                .filter(i => i.dataset.label !== '总重量' && i.dataset.label !== '総重量')
                                 .reduce((sum, i) => sum + Number(i.parsed?.y || 0), 0);
-                            return `合計: ${total} g`;
+                            return `合计: ${total} g`;
                         }
                     }
                 }
