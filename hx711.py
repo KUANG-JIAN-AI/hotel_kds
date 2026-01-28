@@ -25,7 +25,7 @@ while True:
         }
         # 通过网络发送到云端
         response = requests.post(CLOUD_URL, json=payload, timeout=5)
-        print(f"数据已同步: {weight}g, 响应: {response.status_code}")
+        print(f"数据已同步: {w}g, 响应: {response.status_code}")
     except Exception as e:
         print(f"同步失败: {e}")
     
