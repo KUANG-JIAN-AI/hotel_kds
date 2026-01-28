@@ -1,3 +1,8 @@
+
+python -m venv .venv
+source .venv/bin/activate
+
+pip install --upgrade pip
 pip install -r requirements.txt
 
 更换 .env 的数据库信息
@@ -7,6 +12,8 @@ DB_URI=mysql+pymysql://root:123456@34.172.71.167/hotel_kds
 sudo systemctl start hotel
 
 sudo systemctl enable hotel
+
+sudo systemctl restart hotel
 
 查看状态
 sudo systemctl status hotel
